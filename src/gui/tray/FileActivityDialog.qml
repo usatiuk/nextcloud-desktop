@@ -10,6 +10,9 @@ Window {
 
     property alias model: activityModel
 
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+    LayoutMirroring.childrenInherit: true
+
     NC.FileActivityListModel {
         id: activityModel
     }   

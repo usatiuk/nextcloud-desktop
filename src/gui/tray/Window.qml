@@ -25,6 +25,9 @@ Window {
 
     property int fileActivityDialogObjectId: -1
 
+    LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLef
+    LayoutMirroring.childrenInherit: true
+
     readonly property int maxMenuHeight: Style.trayWindowHeight - Style.trayWindowHeaderHeight - 2 * Style.trayWindowBorderWidth
 
     function openFileActivityDialog(objectName, objectId) {

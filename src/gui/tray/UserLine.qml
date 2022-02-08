@@ -235,7 +235,7 @@ MenuItem {
 
                 MenuItem {
                     id: removeAccountButton
-                    text: qsTr("Remove account")
+                    text: model.removeAccountText
                     font.pixelSize: Style.topLinePixelSize
                     palette.windowText: Style.ncTextColor
                     hoverEnabled: true

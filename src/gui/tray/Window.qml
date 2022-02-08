@@ -598,6 +598,7 @@ Window {
                     id: trayWindowAppsButton
                     icon.source: "qrc:///client/theme/white/more-apps.svg"
                     icon.color: UserModel.currentUser.headerTextColor
+                    visible: appsMenu.count
 
                     onClicked: {
                         if(appsMenu.count <= 0) {

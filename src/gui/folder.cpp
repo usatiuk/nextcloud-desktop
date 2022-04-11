@@ -851,6 +851,7 @@ void Folder::startSync(const QStringList &pathList)
         auto interval = ConfigFile().fullLocalDiscoveryInterval();
         QByteArray env = qgetenv("OWNCLOUD_FULL_LOCAL_DISCOVERY_INTERVAL");
         if (!env.isEmpty()) {
+            qCInfo(lcFolder) << "Local discovery info. Conditions. OWNCLOUD_FULL_LOCAL_DISCOVERY_INTERVAL is:" << env;
             interval = std::chrono::milliseconds(env.toLongLong());
         }
         return interval;
@@ -859,6 +860,15 @@ void Folder::startSync(const QStringList &pathList)
     bool periodicFullLocalDiscoveryNow =
         fullLocalDiscoveryInterval.count() >= 0 // negative means we don't require periodic full runs
         && _timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count());
+
+    qCInfo(lcFolder) << "Local discovery info. Conditions."
+                     << "!_folderWatcher.isNull():" << !_folderWatcher.isNull()
+                     << "_folderWatcher->isReliable(): " << _folderWatcher->isReliable()
+                     << "hasDoneFullLocalDiscovery:" << hasDoneFullLocalDiscovery
+                     << "fullLocalDiscoveryInterval.count():" << fullLocalDiscoveryInterval.count()
+                     << "_timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count()):"
+                     << _timeSinceLastFullLocalDiscovery.hasExpired(fullLocalDiscoveryInterval.count());
+
     if (_folderWatcher && _folderWatcher->isReliable()
         && hasDoneFullLocalDiscovery
         && !periodicFullLocalDiscoveryNow) {
@@ -1006,6 +1016,7 @@ void Folder::slotSyncFinished(bool success)
             || _syncResult.status() == SyncResult::Problem)
         && success) {
         if (_engine->lastLocalDiscoveryStyle() == LocalDiscoveryStyle::FilesystemOnly) {
+            qCInfo(lcFolder) << "Local discovery info. _timeSinceLastFullLocalDiscovery.start().";
             _timeSinceLastFullLocalDiscovery.start();
         }
     }
@@ -1129,6 +1140,7 @@ void Folder::slotScheduleThisFolder()
 
 void Folder::slotNextSyncFullLocalDiscovery()
 {
+    qCInfo(lcFolder) << "Local discovery info. _timeSinceLastFullLocalDiscovery.invalidate().";
     _timeSinceLastFullLocalDiscovery.invalidate();
 }
 

@@ -419,6 +419,28 @@ void ActivityListModel::ingestActivities(const QJsonArray &activities)
         }
     }
 
+    beginInsertRows({}, _finalList.size(), _finalList.size() + list.size() - 1);
+    _finalList.append(list);
+    endInsertRows();
+
+    if (_showMoreActivitiesAvailableEntry) {
+        Activity a;
+        a._type = Activity::ActivityType;
+        a._accName = _accountState->account()->displayName();
+        a._id = -1;
+        a._subject = tr("For more activities please open the Activity app.");
+        a._dateTime = QDateTime::currentDateTime();
+
+        AccountApp *app = _accountState->findApp(QLatin1String("activity"));
+        if (app) {
+            a._link = app->url();
+        }
+
+        beginInsertRows({}, _finalList.size(), _finalList.size() + 1);
+        _finalList.append(a);
+        endInsertRows();
+    }
+
     _activityLists.append(list);
 }
 
@@ -437,8 +459,6 @@ void ActivityListModel::activitiesReceived(const QJsonDocument &json, int status
     _currentlyFetching = false;
 
     ingestActivities(activities);
-
-    combineActivityLists();
 
     emit activityJobStatusCode(statusCode);
 }

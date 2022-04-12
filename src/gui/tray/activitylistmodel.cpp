@@ -362,7 +362,7 @@ bool ActivityListModel::canFetchMore(const QModelIndex &) const
 
 void ActivityListModel::startFetchJob()
 {
-    if (!_accountState->isConnected()) {
+    if (!_accountState->isConnected() || _currentlyFetching) {
         return;
     }
     auto *job = new JsonApiJob(_accountState->account(), QLatin1String("ocs/v2.php/apps/activity/api/v2/activity"), this);
@@ -771,7 +771,7 @@ bool ActivityListModel::canFetchActivities() const
 
 void ActivityListModel::fetchMore(const QModelIndex &)
 {
-    if (canFetchActivities() && !_currentlyFetching) {
+    if (canFetchActivities()) {
         startFetchJob();
     }
 }

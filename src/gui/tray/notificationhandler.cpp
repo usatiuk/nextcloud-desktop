@@ -115,8 +115,6 @@ void ServerNotificationHandler::slotNotificationsReceived(const QJsonDocument &j
             al._verb = "REPLY";
             al._primary = true;
             a._links.insert(0, al);
-
-            list.append(a);
         } 
 
         a._status = 0;

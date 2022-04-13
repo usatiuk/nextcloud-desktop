@@ -419,9 +419,11 @@ void ActivityListModel::ingestActivities(const QJsonArray &activities)
         }
     }
 
-    beginInsertRows({}, _finalList.size(), _finalList.size() + list.size() - 1);
-    _finalList.append(list);
-    endInsertRows();
+    if (!list.isEmpty()) {
+        beginInsertRows({}, _finalList.size(), _finalList.size() + list.size() - 1);
+        _finalList.append(list);
+        endInsertRows();
+    }
 
     if (_showMoreActivitiesAvailableEntry) {
         Activity a;
@@ -436,7 +438,7 @@ void ActivityListModel::ingestActivities(const QJsonArray &activities)
             a._link = app->url();
         }
 
-        beginInsertRows({}, _finalList.size(), _finalList.size() + 1);
+        beginInsertRows({}, _finalList.size(), _finalList.size());
         _finalList.append(a);
         endInsertRows();
     }

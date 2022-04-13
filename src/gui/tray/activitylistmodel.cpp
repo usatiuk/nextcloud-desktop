@@ -781,9 +781,15 @@ void ActivityListModel::combineActivityLists()
         }
     }
 
-    beginResetModel();
-    _finalList = resultList;
-    endResetModel();
+    if (!_finalList.isEmpty()) {
+        beginResetModel();
+        _finalList = resultList;
+        endResetModel();
+    } else if (resultList.size() > 0) {
+        beginInsertRows({}, _finalList.size(), _finalList.size() + resultList.size() - 1);
+        _finalList.append(resultList);
+        endInsertRows();
+    }
 }
 
 bool ActivityListModel::canFetchActivities() const

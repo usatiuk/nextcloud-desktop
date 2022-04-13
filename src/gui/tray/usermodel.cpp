@@ -209,7 +209,7 @@ bool User::checkPushNotificationsAreReady() const
 
 void User::slotRefreshImmediately() {
     if (_account.data() && _account.data()->isConnected()) {
-        slotRefreshActivities();
+        //slotRefreshActivities();
     }
     slotRefreshNotifications();
 }

@@ -533,7 +533,7 @@ void DiscoverySingleDirectoryJob::lsJobFinishedWithoutErrorSlot()
     for (const auto &result : _results) {
         files += result.name + "; ";
     }
-    qCInfo(lcDiscovery) << "DiscoverySingleDirectoryJob::lsJobFinishedWithoutErrorSlot _results:" << files;
+    qCInfo(lcDiscovery) << "DiscoverySingleDirectoryJob::lsJobFinishedWithoutErrorSlot _subPath:" << _subPath << " _results:" << files;
     emit finished(_results);
     deleteLater();
 }

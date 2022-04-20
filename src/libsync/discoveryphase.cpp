@@ -529,6 +529,11 @@ void DiscoverySingleDirectoryJob::lsJobFinishedWithoutErrorSlot()
         return;
     }
     emit etag(_firstEtag, QDateTime::fromString(QString::fromUtf8(_lsColJob->responseTimestamp()), Qt::RFC2822Date));
+    QString files;
+    for (const auto &result : _results) {
+        files += result.name + "; ";
+    }
+    qCInfo(lcDiscovery) << "DiscoverySingleDirectoryJob::lsJobFinishedWithoutErrorSlot _results:" << files;
     emit finished(_results);
     deleteLater();
 }

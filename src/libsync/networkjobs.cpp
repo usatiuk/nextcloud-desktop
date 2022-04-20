@@ -225,6 +225,8 @@ bool LsColXMLParser::parse(const QByteArray &xml, QHash<QString, ExtraFolderInfo
     QXmlStreamReader reader(xml);
     reader.addExtraNamespaceDeclaration(QXmlStreamNamespaceDeclaration("d", "DAV:"));
 
+    qCInfo(lcLsColJob) << "LsColXMLParser::parse expectedPath:" << expectedPath << "xml:" << xml;
+
     QStringList folders;
     QString currentHref;
     QMap<QString, QString> currentTmpProperties;

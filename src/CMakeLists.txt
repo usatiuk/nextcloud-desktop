@@ -4,18 +4,26 @@ endif()
 
 include(ECMEnableSanitizers)
 
-find_package(Qt5 5.15 COMPONENTS Core Network Xml Concurrent REQUIRED)
-find_package(Qt5 5.15 COMPONENTS WebEngineWidgets WebEngine)
+if (Qt6_FOUND)
+    find_package(Qt6 COMPONENTS REQUIRED Core Network Xml Concurrent WebEngineWidgets)
+else()
+    set(REQUIRED_QT_VERSION "5.15.0")
+    find_package(Qt5 ${REQUIRED_QT_VERSION} COMPONENTS REQUIRED Core Network Xml Concurrent WebEngineWidgets WebEngine)
+endif()
 
 if(Qt5WebEngine_FOUND AND Qt5WebEngineWidgets_FOUND)
   add_compile_definitions(WITH_WEBENGINE=1)
 endif()
 
-get_target_property (QT_QMAKE_EXECUTABLE Qt5::qmake IMPORTED_LOCATION)
+get_target_property (QT_QMAKE_EXECUTABLE Qt::qmake IMPORTED_LOCATION)
 message(STATUS "Using Qt ${Qt5Core_VERSION} (${QT_QMAKE_EXECUTABLE})")
 
 if(NOT TOKEN_AUTH_ONLY)
-    find_package(Qt5Keychain REQUIRED)
+    if(NOT Qt6_FOUND)
+        find_package(Qt5Keychain REQUIRED)
+    else()
+        find_package(Qt6Keychain REQUIRED)
+    endif()
 endif()
 
 # TODO: Mingw64 7.3 might also need to be excluded here as it seems to not automatically link libssp

@@ -240,6 +240,13 @@ void ProcessDirectoryJob::process()
         if (!checkForInvalidFileName(path, entries, e)) {
             continue;
         }
+
+        // HACK: Sometimes the serverEntry.etag does not correctly have its quotation marks amputated in the string.
+        // We are once again making sure they are chopped off here, but we should really find the root cause for why
+        // exactly they are not being lobbed off at any of the prior points of processing.
+
+        e.serverEntry.etag = Utility::normalizeEtag(e.serverEntry.etag);
+
         processFile(std::move(path), e.localEntry, e.serverEntry, e.dbEntry);
     }
     QTimer::singleShot(0, _discoveryData, &DiscoveryPhase::scheduleMoreJobs);
@@ -363,7 +370,7 @@ void ProcessDirectoryJob::processFile(PathTuple path,
 {
     const char *hasServer = serverEntry.isValid() ? "true" : _queryServer == ParentNotChanged ? "db" : "false";
     const char *hasLocal = localEntry.isValid() ? "true" : _queryLocal == ParentNotChanged ? "db" : "false";
-    qCInfo(lcDisco).nospace() << "Processing " << path._original
+    qCInfo(lcDisco).nospace() << "Processing " << path._original << " | (localDB / localFile / serverEntry)"
                               << " | valid: " << dbEntry.isValid() << "/" << hasLocal << "/" << hasServer
                               << " | mtime: " << dbEntry._modtime << "/" << localEntry.modtime << "/" << serverEntry.modtime
                               << " | size: " << dbEntry._fileSize << "/" << localEntry.size << "/" << serverEntry.size

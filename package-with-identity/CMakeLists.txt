@@ -2,21 +2,22 @@ project (PackageWithIdentity)
 
 set(APPX_MANIFEST_IDENTITY_VERSION ${MIRALL_VERSION_FOUR_COMPONENTS})
 set(APPX_MANIFEST_IDENTITY_NAME "${APPLICATION_EXECUTABLE}.app")
-set(APPX_MANIFEST_PUBLISHER "CN=${APPLICATION_VENDOR}")
+set(APPX_MANIFEST_PUBLISHER "CN=SparsePackageTester")
 set(APPX_MANIFEST_PACKAGE_NAME "${APPLICATION_SHORTNAME}")
 set(APPX_MANIFEST_APPLICATION_ID "${APPLICATION_REV_DOMAIN}.${APPLICATION_EXECUTABLE}")
 set(APPX_MANIFEST_APPLICAION_EXECUTABLE "${APPLICATION_EXECUTABLE}.exe")
 set(APPX_MANIFEST_DISPLAY_NAME "${APPLICATION_NAME}")
 set(APPX_MANIFEST_PUBLISHER_DISPLAY_NAME ${APPLICATION_VENDOR})
 
-
-message("Running package-with-identity Cmake")
-
 configure_file(AppxManifest.xml.in ${CMAKE_CURRENT_BINARY_DIR}/AppxManifest.xml)
 
-execute_process(COMMAND "MakeAppx.exe pack /d D:/work/nextcloud/desktop/out/build/x64-Debug/package-with-identity /p D:/work/nextcloud/desktop/out/build/x64-Debug/package-with-identity/identiypackage.msix /nv"
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  RESULT_VARIABLE make_msix_result
-  OUTPUT_VARIABLE make_msix_ver)
+add_custom_target(package-with-identity
+	COMMAND MakeAppx.exe pack /d ${CMAKE_CURRENT_BINARY_DIR} /p ${BIN_OUTPUT_DIRECTORY}/${WIN_IDENTITY_PACKAGE_NAME} /nv
+    COMMENT "Creating ${APPX_MANIFEST_PACKAGE_NAME}..."
+)
 
-message("Building MSIX:"${make_msix_result})
+add_custom_command(
+  TARGET package-with-identity POST_BUILD
+  COMMAND SignTool.exe sign /fd SHA256 /a /f ${CMAKE_CURRENT_SOURCE_DIR}/SparsePackageTest.pfx /p qazXSW123 ${BIN_OUTPUT_DIRECTORY}/${WIN_IDENTITY_PACKAGE_NAME}
+  COMMENT "Signing ${APPX_MANIFEST_PACKAGE_NAME}..."
+)

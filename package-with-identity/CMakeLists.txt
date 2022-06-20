@@ -11,7 +11,7 @@ set(APPX_MANIFEST_PUBLISHER_DISPLAY_NAME ${APPLICATION_VENDOR})
 
 configure_file(AppxManifest.xml.in ${CMAKE_CURRENT_BINARY_DIR}/AppxManifest.xml)
 
-add_custom_target(package-with-identity
+add_custom_target(package-with-identity ALL
 	COMMAND MakeAppx.exe pack /d ${CMAKE_CURRENT_BINARY_DIR} /p ${BIN_OUTPUT_DIRECTORY}/${WIN_IDENTITY_PACKAGE_NAME} /nv
     COMMENT "Creating ${APPX_MANIFEST_PACKAGE_NAME}..."
 )

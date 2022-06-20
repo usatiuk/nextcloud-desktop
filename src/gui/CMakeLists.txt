@@ -653,7 +653,6 @@ if(WIN32)
         COMMENT
         "Adding sparce-package-side-by-side.manifest ..." 
     )
-    add_dependencies(nextcloud package-with-identity)
 endif()
 
 IF(BUILD_UPDATER)

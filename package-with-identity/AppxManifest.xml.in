@@ -47,9 +47,9 @@
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:ExeServer DisplayName="Cloud Mirror Thumbnail Handler" Executable="CloudMirror.exe">
-              <com:Class Id="3d781652-78c5-4038-87a4-ec5940ab560b" />
-            </com:ExeServer>
+            <com:SurrogateServer  DisplayName="Cloud Mirror Thumbnail Handler">
+              <com:Class Id="3d781652-78c5-4038-87a4-ec5940ab560b" Path="RecipeThumbnailProvider.dll" ThreadingModel="STA"/>
+            </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
       </Extensions>

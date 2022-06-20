@@ -642,14 +642,14 @@ endif()
 
 if(WIN32)
     set(APPLIATION_MANIFEST_IDENTITY_VERSION ${MIRALL_VERSION_FOUR_COMPONENTS})
-    set(APPLIATION_MANIFEST_IDENTITY_NAME "${APPLICATION_EXECUTABLE}.app")
+    set(APPLIATION_MANIFEST_IDENTITY_NAME "${APPLICATION_NAME}")
     set(APPLIATION_MANIFEST_MSIX_PUBLISHER "CN=SparsePackageTester")
-    set(APPLIATION_MANIFEST_MSIX_PACKAGE_NAME "${APPLICATION_SHORTNAME}")
+    set(APPLIATION_MANIFEST_MSIX_PACKAGE_NAME "${APPLICATION_EXECUTABLE}.app")
     set(APPLIATION_MANIFEST_MSIX_APPLICATION_ID "${APPLICATION_REV_DOMAIN}.${APPLICATION_EXECUTABLE}")
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sparce-package-side-by-side.manifest.in ${CMAKE_CURRENT_SOURCE_DIR}/sparce-package-side-by-side.manifest)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sparce-package-side-by-side.manifest.in ${BIN_OUTPUT_DIRECTORY}/sparce-package-side-by-side.manifest)
     add_custom_command(TARGET nextcloud POST_BUILD
         COMMAND
-        "mt.exe" -validate_manifest -manifest \"${CMAKE_CURRENT_SOURCE_DIR}\\sparce-package-side-by-side.manifest\" "-inputresource:${BIN_OUTPUT_DIRECTORY}\\${APPLICATION_EXECUTABLE}.exe;#1" "-outputresource:${BIN_OUTPUT_DIRECTORY}\\${APPLICATION_EXECUTABLE}.exe;#1"
+        "mt.exe" -validate_manifest -manifest ${BIN_OUTPUT_DIRECTORY}/sparce-package-side-by-side.manifest "-inputresource:${BIN_OUTPUT_DIRECTORY}\\${APPLICATION_EXECUTABLE}.exe;#1" "-outputresource:${BIN_OUTPUT_DIRECTORY}\\${APPLICATION_EXECUTABLE}.exe;#1"
         COMMENT
         "Adding sparce-package-side-by-side.manifest ..." 
     )

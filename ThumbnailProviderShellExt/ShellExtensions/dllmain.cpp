@@ -59,10 +59,50 @@ public:
         : _cRef(1)
         , _pStream(NULL)
     {
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::ShellExtensionThumbnailProvider\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
     }
 
     virtual ~ShellExtensionThumbnailProvider()
     {
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::~ShellExtensionThumbnailProvider\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
         if (_pStream) {
             _pStream->Release();
         }
@@ -76,13 +116,76 @@ public:
             QITABENT(ShellExtensionThumbnailProvider, IThumbnailProvider),
             {0},
         };
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::QueryInterface\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
         return QISearch(this, qit, riid, ppv);
     }
 
-    IFACEMETHODIMP_(ULONG) AddRef() { return InterlockedIncrement(&_cRef); }
+    IFACEMETHODIMP_(ULONG) AddRef() 
+    {
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::AddRef\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
+        return InterlockedIncrement(&_cRef); 
+    }
 
     IFACEMETHODIMP_(ULONG) Release()
     {
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::Release\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
         ULONG cRef = InterlockedDecrement(&_cRef);
         if (!cRef) {
             delete this;
@@ -93,6 +196,26 @@ public:
     // IInitializeWithStream
     IFACEMETHODIMP Initialize(IStream *pStream, DWORD grfMode)
     {
+        // Open a handle to the file
+        HANDLE hFile = CreateFile(L"D:\\work\\ShellExtensions.log.txt", // Filename
+            FILE_APPEND_DATA, // Desired access
+            FILE_SHARE_READ, // Share mode
+            NULL, // Security attributes
+            OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
+            FILE_ATTRIBUTE_NORMAL, // Flags and attributes
+            NULL); // Template file handle
+
+        // Write data to the file
+        std::string strText = "ShellExtensionThumbnailProvider::Initialize\n";
+        DWORD bytesWritten;
+        WriteFile(hFile, // Handle to the file
+            strText.c_str(), // Buffer to write
+            strText.size(), // Buffer size
+            &bytesWritten, // Bytes written
+            nullptr); // Overlapped
+
+        // Close the handle once we don't need it.
+        CloseHandle(hFile);
         HRESULT hr = E_UNEXPECTED; // can only be inited once
         if (_pStream == NULL) {
             // take a reference to the stream if we have not been inited yet

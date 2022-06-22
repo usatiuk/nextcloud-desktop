@@ -33,6 +33,29 @@
 #include <comdef.h>
 #include <ntstatus.h>
 
+#include <winrt/base.h>
+#include <winrt\Windows.Storage.Provider.h>
+#include <winrt\Windows.Foundation.h>
+#include <winrt/Windows.ApplicationModel.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+#include <winrt/Windows.UI.ViewManagement.h>
+#include <winrt\windows.foundation.collections.h>
+#include <winrt\windows.storage.provider.h>
+#include <winrt\Windows.Security.Cryptography.h>
+
+namespace winrt {
+    using namespace ::winrt::Windows::Foundation;
+    using namespace ::winrt::Windows::Foundation::Collections;
+    using namespace ::winrt::Windows::UI::Core;
+    using namespace ::winrt::Windows::UI::ViewManagement;
+    using namespace ::winrt::Windows::Storage::Provider;
+    using namespace Windows::Storage;
+    using namespace Windows::Storage::Streams;
+    using namespace Windows::Storage::Provider;
+    using namespace Windows::Foundation::Collections;
+    using namespace Windows::Security::Cryptography;
+}
+
 Q_LOGGING_CATEGORY(lcCfApiWrapper, "nextcloud.sync.vfs.cfapi.wrapper", QtInfoMsg)
 
 #define FIELD_SIZE( type, field ) ( sizeof( ( (type*)0 )->field ) )
@@ -407,20 +430,69 @@ QString retrieveWindowsSid()
     return {};
 }
 
-bool createSyncRootRegistryKeys(const QString &providerName, const QString &folderAlias, const QString &displayName, const QString &accountDisplayName, const QString &syncRootPath)
+winrt::IAsyncAction createSyncRootRegistryKeys(const QString &providerName, const QString &providerVersion,
+    const QString &folderAlias, const QString &displayName, const QString &accountDisplayName,
+    const QString &syncRootPath)
 {
+    const auto windowsSid = retrieveWindowsSid();
+
+    const auto syncRootId =
+        QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
+    auto syncRootID = syncRootId;
+
+    winrt::StorageProviderSyncRootInfo info;
+    info.Id(syncRootID.toStdWString());
+
+    // The string can be in any form acceptable to SHLoadIndirectString.
+    info.DisplayNameResource(providerName.toStdWString());
+
+    // This icon is just for the sample. You should provide your own branded icon here
+    info.IconResource(L"%SystemRoot%\\system32\\charmap.exe,0");
+    info.HydrationPolicy(winrt::StorageProviderHydrationPolicy::Full);
+    info.HydrationPolicyModifier(winrt::StorageProviderHydrationPolicyModifier::None);
+    info.PopulationPolicy(winrt::StorageProviderPopulationPolicy::AlwaysFull);
+    info.InSyncPolicy(winrt::StorageProviderInSyncPolicy::PreserveInsyncForSyncEngine);
+    info.Version(providerVersion.toStdWString());
+    info.ShowSiblingsAsGroup(false);
+    info.HardlinkPolicy(winrt::StorageProviderHardlinkPolicy::None);
+
+    winrt::Uri uri(L"http://cloudmirror.example.com/recyclebin");
+    info.RecycleBinUri(uri);
+
+    // Context
+    // ProviderFolderLocations::GetServerFolder()
+    std::wstring syncRootIdentity(L"cloud.nextcloud.com");
+    syncRootIdentity.append(L"->");
+    syncRootIdentity.append(syncRootPath.toStdWString());
+
+    wchar_t const contextString[] = L"TestProviderContextString";
+    winrt::IBuffer contextBuffer =
+        winrt::CryptographicBuffer::ConvertStringToBinary(syncRootIdentity.data(), winrt::BinaryStringEncoding::Utf8);
+    info.Context(contextBuffer);
+
+    /*winrt::IVector<winrt::StorageProviderItemPropertyDefinition> customStates =
+        info.StorageProviderItemPropertyDefinitions();
+    AddCustomState(customStates, L"CustomStateName1", 1);
+    AddCustomState(customStates, L"CustomStateName2", 2);
+    AddCustomState(customStates, L"CustomStateName3", 3);*/
+
+    winrt::StorageFolder folder{co_await winrt::StorageFolder::GetFolderFromPathAsync(syncRootPath.toStdWString())};
+
+    info.Path(folder);
+
+    winrt::StorageProviderSyncRootManager::Register(info);
+
+    // Give the cache some time to invalidate
+    Sleep(1000);
+
+    co_return;
+
     // We must set specific Registry keys to make the progress bar refresh correctly and also add status icons into Windows Explorer
     // More about this here: https://docs.microsoft.com/en-us/windows/win32/shell/integrate-cloud-storage
-    const auto windowsSid = retrieveWindowsSid();
-    Q_ASSERT(!windowsSid.isEmpty());
-    if (windowsSid.isEmpty()) {
-        qCWarning(lcCfApiWrapper) << "Failed to set Registry keys for shell integration, as windowsSid is empty. Progress bar will not work.";
-        return false;
-    }
+    
 
     // syncRootId should be: [storage provider ID]![Windows SID]![Account ID]![FolderAlias] (FolderAlias is a custom part added here to be able to register multiple sync folders for the same account)
     // folder registry keys go like: Nextcloud!S-1-5-21-2096452760-2617351404-2281157308-1001!user@nextcloud.lan:8080!0, Nextcloud!S-1-5-21-2096452760-2617351404-2281157308-1001!user@nextcloud.lan:8080!1, etc. for each sync folder
-    const auto syncRootId = QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
 
     const QString providerSyncRootIdRegistryKey = QStringLiteral(R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SyncRootManager\)") + syncRootId;
     const QString providerSyncRootIdUserSyncRootsRegistryKey = providerSyncRootIdRegistryKey + QStringLiteral(R"(\UserSyncRoots\)");
@@ -440,19 +512,6 @@ bool createSyncRootRegistryKeys(const QString &providerName, const QString &fold
         { providerSyncRootIdRegistryKey, QStringLiteral("IconResource"), REG_EXPAND_SZ, QString(QDir::toNativeSeparators(qApp->applicationFilePath()) + QStringLiteral(",0")) },
         { providerSyncRootIdUserSyncRootsRegistryKey, windowsSid, REG_SZ, syncRootPath }
     };
-
-    for (const auto &registryKeyToSet : qAsConst(registryKeysToSet)) {
-        if (!OCC::Utility::registrySetKeyValue(HKEY_LOCAL_MACHINE, registryKeyToSet.subKey, registryKeyToSet.valueName, registryKeyToSet.type, registryKeyToSet.value)) {
-            qCWarning(lcCfApiWrapper) << "Failed to set Registry keys for shell integration. Progress bar will not work.";
-            const auto deleteKeyResult = OCC::Utility::registryDeleteKeyTree(HKEY_LOCAL_MACHINE, providerSyncRootIdRegistryKey);
-            Q_ASSERT(!deleteKeyResult);
-            return false;
-        }
-    }
-
-    qCInfo(lcCfApiWrapper) << "Successfully set Registry keys for shell integration at:" << providerSyncRootIdRegistryKey << ". Progress bar will work.";
-
-    return true;
 }
 
 bool deleteSyncRootRegistryKey(const QString &syncRootPath, const QString &providerName, const QString &accountDisplayName)
@@ -491,12 +550,7 @@ bool deleteSyncRootRegistryKey(const QString &syncRootPath, const QString &provi
 OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &path, const QString &providerName, const QString &providerVersion, const QString &folderAlias, const QString &displayName, const QString &accountDisplayName)
 {
     // even if we fail to register our sync root with shell, we can still proceed with using the VFS
-    const auto createRegistryKeyResult = createSyncRootRegistryKeys(providerName, folderAlias, displayName, accountDisplayName, path);
-    Q_ASSERT(createRegistryKeyResult);
-
-    if (!createRegistryKeyResult) {
-        qCWarning(lcCfApiWrapper) << "Failed to create the registry key for path:" << path;
-    }
+    createSyncRootRegistryKeys(providerName, providerVersion, folderAlias, displayName, accountDisplayName, path);
 
     // API is somehow keeping the pointers for longer than one would expect or freeing them itself
     // the internal format of QString is likely the right one for wstring on Windows so there's in fact not necessarily a need to copy

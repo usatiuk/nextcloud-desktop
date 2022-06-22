@@ -36,19 +36,19 @@
 	  <Extensions>
         <desktop3:Extension Category="windows.cloudFiles">
           <desktop3:CloudFiles>
-            <desktop3:ThumbnailProviderHandler Clsid="3d781652-78c5-4038-87a4-ec5940ab560b"/>
+            <desktop3:ThumbnailProviderHandler Clsid="70F03B6A-EA1C-401E-9D8D-614C57938740"/>
 			<desktop3:CustomStateHandler Clsid="00000000-0000-0000-0000-000000000000"/>
             <desktop3:ExtendedPropertyHandler Clsid="00000000-0000-0000-0000-000000000000"/>
             <desktop3:BannersHandler Clsid="00000000-0000-0000-0000-000000000000"/>
 			<desktop3:CloudFilesContextMenus>
-              <desktop3:Verb Id="Command1" Clsid="165cd069-d9c8-42b4-8e37-b6971afa4494" />
+              <desktop3:Verb Id="Command1" Clsid="00000000-0000-0000-0000-000000000000" />
             </desktop3:CloudFilesContextMenus>
           </desktop3:CloudFiles>
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer  DisplayName="Cloud Mirror Thumbnail Handler">
-              <com:Class Id="3d781652-78c5-4038-87a4-ec5940ab560b" Path="RecipeThumbnailProvider.dll" ThreadingModel="STA"/>
+            <com:SurrogateServer  DisplayName="Recipe Thumbnail Handler">
+              <com:Class Id="70F03B6A-EA1C-401E-9D8D-614C57938740" Path="ShellExtensions.dll" ThreadingModel="STA"/>
             </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>

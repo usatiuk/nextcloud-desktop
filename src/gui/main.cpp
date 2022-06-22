@@ -37,6 +37,10 @@
 #include "updater/updater.h"
 #endif
 
+#ifdef Q_OS_WIN
+#include <appmodel.h>
+#endif
+
 #include <QTimer>
 #include <QMessageBox>
 #include <QDebug>
@@ -101,6 +105,28 @@ int main(int argc, char **argv)
     auto surfaceFormat = QSurfaceFormat::defaultFormat();
     surfaceFormat.setOption(QSurfaceFormat::ResetNotification);
     QSurfaceFormat::setDefaultFormat(surfaceFormat);
+
+    UINT32 length = 0;
+    LONG rc = GetCurrentPackageFullName(&length, NULL);
+    if (rc != ERROR_INSUFFICIENT_BUFFER) {
+        if (rc == APPMODEL_ERROR_NO_PACKAGE)
+            wprintf(L"Process has no package identity\n");
+        else
+            wprintf(L"Error %d in GetCurrentPackageFullName\n", rc);
+    }
+
+    PWSTR fullName = (PWSTR)malloc(length * sizeof(*fullName));
+    if (fullName == NULL) {
+        wprintf(L"Error allocating memory\n");
+    }
+
+    rc = GetCurrentPackageFullName(&length, fullName);
+    if (rc != ERROR_SUCCESS) {
+        wprintf(L"Error %d retrieving PackageFullName\n", rc);
+    }
+    wprintf(L"%s\n", fullName);
+
+    free(fullName);
 
     OCC::Application app(argc, argv);
 

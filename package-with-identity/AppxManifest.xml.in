@@ -47,9 +47,9 @@
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer  DisplayName="Recipe Thumbnail Handler">
-              <com:Class Id="70F03B6A-EA1C-401E-9D8D-614C57938740" Path="ShellExtensions.dll" ThreadingModel="STA"/>
-            </com:SurrogateServer>
+            <com:ExeServer DisplayName="Cloud Mirror Thumbnail Handler" Executable="nextcloud.exe">
+              <com:Class Id="70F03B6A-EA1C-401E-9D8D-614C57938740" />
+            </com:ExeServer>
           </com:ComServer>
         </com:Extension>
       </Extensions>

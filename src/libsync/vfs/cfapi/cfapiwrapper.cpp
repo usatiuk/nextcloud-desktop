@@ -43,6 +43,8 @@
 #include <winrt\windows.storage.provider.h>
 #include <winrt\Windows.Security.Cryptography.h>
 
+#include <thumbcache.h>
+
 namespace winrt {
     using namespace ::winrt::Windows::Foundation;
     using namespace ::winrt::Windows::Foundation::Collections;
@@ -56,6 +58,7 @@ namespace winrt {
     using namespace Windows::Security::Cryptography;
 }
 
+
 Q_LOGGING_CATEGORY(lcCfApiWrapper, "nextcloud.sync.vfs.cfapi.wrapper", QtInfoMsg)
 
 #define FIELD_SIZE( type, field ) ( sizeof( ( (type*)0 )->field ) )
@@ -66,6 +69,101 @@ Q_LOGGING_CATEGORY(lcCfApiWrapper, "nextcloud.sync.vfs.cfapi.wrapper", QtInfoMsg
 namespace {
 constexpr auto syncRootFlagsFull = 34;
 constexpr auto syncRootFlagsNoCfApiContextMenu = 2;
+
+namespace {
+
+    template <typename T>
+    class ClassFactory : public winrt::implements<ClassFactory<T>, IClassFactory>
+    {
+    public:
+        // IClassFactory
+        IFACEMETHODIMP CreateInstance(_In_opt_ IUnknown *unkOuter, REFIID riid, _COM_Outptr_ void **object)
+        {
+            try {
+                auto provider = winrt::make<T>();
+                winrt::com_ptr<IUnknown> unkn{provider.as<IUnknown>()};
+                winrt::check_hresult(unkn->QueryInterface(riid, object));
+                return S_OK;
+            } catch (...) {
+                // winrt::to_hresult() will eat the exception if it is a result of winrt::check_hresult,
+                // otherwise the exception will get rethrown and this method will crash out as it should
+                return winrt::to_hresult();
+            }
+        }
+        IFACEMETHODIMP LockServer(BOOL lock) { return S_OK; }
+    };
+
+    template <typename T>
+    DWORD make_and_register_class_object()
+    {
+        DWORD cookie;
+        auto factory = winrt::make<ClassFactory<T>>();
+        winrt::check_hresult(
+            CoRegisterClassObject(__uuidof(T), factory.get(), CLSCTX_LOCAL_SERVER, REGCLS_MULTIPLEUSE, &cookie));
+        return cookie;
+    }
+}
+
+class __declspec(uuid("70F03B6A-EA1C-401E-9D8D-614C57938740")) ThumbnailProvider
+    : public winrt::implements<ThumbnailProvider, IInitializeWithItem, IThumbnailProvider>
+{
+public:
+    IFACEMETHODIMP ThumbnailProvider::Initialize(_In_ IShellItem *item, _In_ DWORD mode)
+    {
+        try {
+            winrt::check_hresult(item->QueryInterface(__uuidof(_itemDest), _itemDest.put_void()));
+
+            // We want to identify the original item in the source folder that we're mirroring,
+            // based on the placeholder item that we get initialized with.  There's probably a way
+            // to do this based on the file identity blob but this just uses path manipulation.
+            winrt::com_array<wchar_t> destPathItem;
+            winrt::check_hresult(_itemDest->GetDisplayName(SIGDN_FILESYSPATH, winrt::put_abi(destPathItem)));
+
+            qCInfo(lcCfApiWrapper) << "Thumbnail requested for" << destPathItem.data();
+        } catch (...) {
+            return winrt::to_hresult();
+        }
+
+        return S_OK;
+    }
+
+    // IThumbnailProvider
+    IFACEMETHODIMP ThumbnailProvider::GetThumbnail(
+        _In_ UINT width, _Out_ HBITMAP *bitmap, _Out_ WTS_ALPHATYPE *alphaType)
+    {
+        // Retrieve thumbnails of the placeholders on demand by delegating to the thumbnail of the source items.
+        *bitmap = nullptr;
+        *alphaType = WTSAT_UNKNOWN;
+
+        return S_OK;
+    }
+
+private:
+    winrt::com_ptr<IShellItem2> _itemDest;
+    winrt::com_ptr<IShellItem2> _itemSrc;
+};
+
+void InitAndStartServiceTask()
+{
+    auto task = std::thread([]() {
+        winrt::init_apartment(winrt::apartment_type::single_threaded);
+
+        make_and_register_class_object<ThumbnailProvider>();
+        //make_and_register_class_object<TestExplorerCommandHandler>();
+        //make_and_register_class_object<winrt::CloudMirror::implementation::CustomStateProvider>();
+        //make_and_register_class_object<winrt::CloudMirror::implementation::UriSource>();
+        //make_and_register_class_object<winrt::CloudMirror::implementation::MyStatusUISourceFactory>();
+
+        winrt::handle dummyEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr));
+        if (!dummyEvent) {
+            winrt::throw_last_error();
+        }
+        DWORD index;
+        HANDLE temp = dummyEvent.get();
+        CoWaitForMultipleHandles(COWAIT_DISPATCH_CALLS, INFINITE, 1, &temp, &index);
+    });
+    task.detach();
+}
 
 void cfApiSendTransferInfo(const CF_CONNECTION_KEY &connectionKey, const CF_TRANSFER_KEY &transferKey, NTSTATUS status, void *buffer, qint64 offset, qint64 currentBlockLength, qint64 totalLength)
 {
@@ -434,6 +532,8 @@ winrt::IAsyncAction createSyncRootRegistryKeys(const QString &providerName, cons
     const QString &folderAlias, const QString &displayName, const QString &accountDisplayName,
     const QString &syncRootPath)
 {
+    InitAndStartServiceTask();
+
     const auto windowsSid = retrieveWindowsSid();
 
     const auto syncRootId =

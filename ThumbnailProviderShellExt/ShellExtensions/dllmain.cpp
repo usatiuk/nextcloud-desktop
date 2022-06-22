@@ -51,6 +51,8 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     return TRUE;
 }
 
+const CLSID CLSID_RecipeThumbHandler = {0x70F03B6A, 0xEA1C, 0x401E, 0x9D, 0x8D, 0x61, 0x4C, 0x57, 0x93, 0x87, 0x40};
+
 class __declspec(uuid("70F03B6A-EA1C-401E-9D8D-614C57938740")) ShellExtensionThumbnailProvider final
     : public RuntimeClass<RuntimeClassFlags<ClassicCom>, IInitializeWithStream, IThumbnailProvider>
 {
@@ -137,6 +139,16 @@ public:
         // Close the handle once we don't need it.
         CloseHandle(hFile);
         return QISearch(this, qit, riid, ppv);
+    }
+
+    STDMETHODIMP GetClassID(CLSID *pClassID)
+    {
+        if (pClassID == NULL) {
+            return E_POINTER;
+        }
+
+        *pClassID = CLSID_RecipeThumbHandler;
+        return S_OK;
     }
 
     IFACEMETHODIMP_(ULONG) AddRef() 

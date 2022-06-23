@@ -89,7 +89,7 @@ void VfsCfApi::stop()
 void VfsCfApi::unregisterFolder()
 {
     const auto localPath = QDir::toNativeSeparators(params().filesystemPath);
-    const auto result = cfapi::unregisterSyncRoot(localPath, params().providerName, params().account->displayName());
+    const auto result = cfapi::unregisterSyncRoot(localPath, params().providerName, params().alias, params().account->displayName());
     if (!result) {
         qCCritical(lcCfApi) << "Unregistration failed for" << localPath << ":" << result.error();
     }

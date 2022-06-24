@@ -62,6 +62,13 @@ if(WIN32)
     # MSI Upgrade Code (without brackets)
     set( WIN_MSI_UPGRADE_CODE                "FD2FCCA9-BB8F-4485-8F70-A0621B84A7F4" )
 
+    set( APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID   "F137128F-A873-498A-867F-3637045ECE20" )
+
+    set( APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME   "${APPLICATION_NAME} Thumbnail Handler" )
+
+    set( APPX_MANIFEST_SHELLEXT_TARGET_NAME "CfApiShellIntegration")
+    set( APPX_MANIFEST_SHELLEXT_DLL_FOLDER "shellext")
+
     # Windows build options
     option( BUILD_WIN_MSI "Build MSI scripts and helper DLL" OFF )
     option( BUILD_WIN_TOOLS "Build Win32 migration tools" OFF )

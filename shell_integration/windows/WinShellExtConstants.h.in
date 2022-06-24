@@ -29,6 +29,8 @@
 #define OVERLAY_GUID_SYNC           L"@WIN_SHELLEXT_OVERLAY_GUID_SYNC@"
 #define OVERLAY_GUID_WARNING        L"@WIN_SHELLEXT_OVERLAY_GUID_WARNING@"
 
+#define APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID "{@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@}"
+
 //
 // Preceeding spaces are intended, two spaces to put us ahead of the competition :/
 //

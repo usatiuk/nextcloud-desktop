@@ -36,7 +36,7 @@
 	  <Extensions>
         <desktop3:Extension Category="windows.cloudFiles">
           <desktop3:CloudFiles>
-            <desktop3:ThumbnailProviderHandler Clsid="70F03B6A-EA1C-401E-9D8D-614C57938740"/>
+            <desktop3:ThumbnailProviderHandler Clsid="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@"/>
 			<desktop3:CustomStateHandler Clsid="00000000-0000-0000-0000-000000000000"/>
             <desktop3:ExtendedPropertyHandler Clsid="00000000-0000-0000-0000-000000000000"/>
             <desktop3:BannersHandler Clsid="00000000-0000-0000-0000-000000000000"/>
@@ -47,9 +47,9 @@
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:ExeServer DisplayName="Cloud Mirror Thumbnail Handler" Executable="nextcloud.exe">
-              <com:Class Id="70F03B6A-EA1C-401E-9D8D-614C57938740" />
-            </com:ExeServer>
+            <com:SurrogateServer  DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@">
+              <com:Class Id="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
+            </com:SurrogateServer>
           </com:ComServer>
         </com:Extension>
       </Extensions>

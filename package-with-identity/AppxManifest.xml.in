@@ -37,11 +37,11 @@
         <desktop3:Extension Category="windows.cloudFiles">
           <desktop3:CloudFiles>
             <desktop3:ThumbnailProviderHandler Clsid="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@"/>
-			<desktop3:CustomStateHandler Clsid="00000000-0000-0000-0000-000000000000"/>
-            <desktop3:ExtendedPropertyHandler Clsid="00000000-0000-0000-0000-000000000000"/>
-            <desktop3:BannersHandler Clsid="00000000-0000-0000-0000-000000000000"/>
+			<desktop3:CustomStateHandler Clsid="@APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID@"/>
+            <desktop3:ExtendedPropertyHandler Clsid="20000000-0000-0000-0000-000000000001"/>
+            <desktop3:BannersHandler Clsid="20000000-0000-0000-0000-000000000001"/>
 			<desktop3:CloudFilesContextMenus>
-              <desktop3:Verb Id="Command1" Clsid="00000000-0000-0000-0000-000000000000" />
+              <desktop3:Verb Id="Command1" Clsid="@APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID@" />
             </desktop3:CloudFilesContextMenus>
           </desktop3:CloudFiles>
         </desktop3:Extension>
@@ -50,7 +50,13 @@
             <com:SurrogateServer  DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@">
               <com:Class Id="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
             </com:SurrogateServer>
-          </com:ComServer>
+            <com:SurrogateServer  DisplayName="Cloud Mirror Command Handler">
+              <com:Class Id="@APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
+            </com:SurrogateServer>
+            <com:SurrogateServer  DisplayName="Cloud Mirror Custom State Handler">
+              <com:Class Id="@APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
+            </com:SurrogateServer>
+        </com:ComServer>
         </com:Extension>
       </Extensions>
     </Application>

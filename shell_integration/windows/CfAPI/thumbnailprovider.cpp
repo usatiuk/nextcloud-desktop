@@ -16,6 +16,10 @@
 
 #include <Shlguid.h>
 #include <string>
+#include <locale>
+#include <codecvt>
+
+using convert_type = std::codecvt_utf8<wchar_t>;
 
 inline void throw_if_fail(HRESULT hr)
 {
@@ -25,9 +29,9 @@ inline void throw_if_fail(HRESULT hr)
     }
 }
 
-void writeLog(const std::wstring& log) {
+void writeLog(const std::string& log) {
     HANDLE hFile = CreateFile(
-        L"D:\\work\\RecipeThumbProvider.log.txt",     // Filename
+        L"D:\\work\\NextcloudTumbProvider.log.txt",     // Filename
         FILE_APPEND_DATA,          // Desired access
         FILE_SHARE_READ,        // Share mode
         NULL,                   // Security attributes
@@ -39,8 +43,8 @@ void writeLog(const std::wstring& log) {
     DWORD bytesWritten;
     WriteFile(
         hFile,            // Handle to the file
-        log.c_str(),  // Buffer to write
-        log.size(),   // Buffer size
+        (log + std::string("\n")).c_str(),  // Buffer to write
+        log.size() + 1,   // Buffer size
         &bytesWritten,    // Bytes written
         nullptr);         // Overlapped
 
@@ -95,9 +99,14 @@ IFACEMETHODIMP ThumbnailProvider::Initialize(_In_ IShellItem *item, _In_ DWORD m
         throw_if_fail((SHCreateItemFromParsingName(
             sourceItem.data(), NULL, __uuidof(_itemSrc), reinterpret_cast<void **>(&_itemSrc))));
 
-        writeLog(
-            std::wstring(L"ThumbnailProvider::Initialize: pszName") + std::wstring(pszName) + std::wstring(L" \n"));
+        std::wstring_convert<convert_type, wchar_t> converter;
+        std::string converted_str = converter.to_bytes(std::wstring(pszName));
+
+        writeLog(std::string("ThumbnailProvider::Initialize: pszName") + converted_str);
     } catch (_com_error exc) {
+        std::wstring_convert<convert_type, wchar_t> converter;
+        std::string converted_str = converter.to_bytes(std::wstring(exc.ErrorMessage()));
+        writeLog(std::string("Error: ") + std::to_string(exc.Error()) + std::string(" ") + converted_str);
         return exc.Error();
     }
 
@@ -109,7 +118,7 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(_In_ UINT width, _Out_ HBITMAP *b
 {
     // MessageBox(NULL, L"Attach to DLL", L"Attach Now", MB_OK);
     // Open a handle to the file
-    writeLog(L"ThumbnailProvider::GetThumbnail...\n");
+    writeLog("ThumbnailProvider::GetThumbnail...");
     // Retrieve thumbnails of the placeholders on demand by delegating to the thumbnail of the source items.
     *bitmap = nullptr;
     *alphaType = WTSAT_UNKNOWN;
@@ -120,9 +129,11 @@ IFACEMETHODIMP ThumbnailProvider::GetThumbnail(_In_ UINT width, _Out_ HBITMAP *b
             reinterpret_cast<void **>(&thumbnailProviderSource)));
         throw_if_fail(thumbnailProviderSource->GetThumbnail(width, bitmap, alphaType));
     } catch (_com_error exc) {
-        return exc.Error();
+        std::wstring_convert<convert_type, wchar_t> converter;
+        std::string converted_str = converter.to_bytes(std::wstring(exc.ErrorMessage()));
+        writeLog(std::string("Error: ") + std::to_string(exc.Error()) + std::string(" ") + converted_str);
     }
 
-    writeLog(L"ThumbnailProvider::GetThumbnail success!\n");
+    writeLog("ThumbnailProvider::GetThumbnail success!");
     return S_OK;
 }

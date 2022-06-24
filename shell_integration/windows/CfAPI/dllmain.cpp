@@ -14,6 +14,8 @@
 
 #include "cfapishellintegrationclassfactory.h"
 #include "thumbnailprovider.h"
+#include "customstateprovider.h"
+#include "contextmenus.h"
 
 #include <string>
 
@@ -33,13 +35,14 @@ HINSTANCE instanceHandle = NULL;
 // Standard DLL functions
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void *)
 {
+    MessageBox(NULL, L"Attach to DLL", L"DllMain", MB_OK);
     if (dwReason == DLL_PROCESS_ATTACH) {
         instanceHandle = hInstance;
         DisableThreadLibraryCalls(hInstance);
     }
 
     // Open a handle to the file
-    HANDLE hFile = CreateFile(L"D:\\work\\RecipeThumbProvider.log.txt", // Filename
+    HANDLE hFile = CreateFile(L"D:\\work\\NextcloudTumbProvider.log.txt", // Filename
         FILE_APPEND_DATA, // Desired access
         FILE_SHARE_READ, // Share mode
         NULL, // Security attributes

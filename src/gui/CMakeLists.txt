@@ -648,6 +648,8 @@ if(WIN32)
     set(APPLIATION_MANIFEST_MSIX_APPLICATION_ID "App")
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/sparce-package-side-by-side.manifest.in ${BIN_OUTPUT_DIRECTORY}/sparce-package-side-by-side.manifest)
     target_sources(nextcloud PRIVATE ${BIN_OUTPUT_DIRECTORY}/sparce-package-side-by-side.manifest)
+
+    target_compile_features(nextcloud PRIVATE cxx_std_17)
 endif()
 
 IF(BUILD_UPDATER)

@@ -19,13 +19,23 @@
 #include <locale>
 #include <codecvt>
 
+#pragma push_macro("MIDL_CONST_ID")
+#if !defined(_MSC_VER) || (_MSC_VER >= 1910)
+#define MIDL_CONST_ID constexpr const
+#else
+#define MIDL_CONST_ID const __declspec(selectany)
+#endif
+
+MIDL_CONST_ID IID &IID_IStorageProviderItemPropertySource = {};
+
 IFACEMETHODIMP CustomStateProvider::QueryInterface(REFIID riid, void **ppv)
 {
-    static const QITAB qit[] = {
-        QITABENT(CustomStateProvider, GetGuid("8f6f9c3e-f632-4a9b-8d99-d2d7a11df56a")),
+    MessageBox(NULL, L"Attach to DLL", L"CustomStateProvider::QueryInterface", MB_OK);
+    /*static const QITAB qit[] = {
+        QITABENT(CustomStateProvider, IID_IStorageProviderItemPropertySource),
         {0},
-    };
-    return QISearch(this, qit, riid, ppv);
+    };*/
+    return 1;
 }
 
 IFACEMETHODIMP_(ULONG) CustomStateProvider::AddRef()

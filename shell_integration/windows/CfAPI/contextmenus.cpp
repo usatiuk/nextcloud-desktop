@@ -17,6 +17,31 @@ namespace winrt
     using namespace winrt::Windows::Storage::Provider;
 }
 
+IFACEMETHODIMP TestExplorerCommandHandler::QueryInterface(REFIID riid, void **ppv)
+{
+    MessageBox(NULL, L"Attach to DLL", L"TestExplorerCommandHandler::QueryInterface", MB_OK);
+    static const QITAB qit[] = {
+        QITABENT(TestExplorerCommandHandler, IExplorerCommand),
+        QITABENT(TestExplorerCommandHandler, IObjectWithSite),
+        {0},
+    };
+    return QISearch(this, qit, riid, ppv);
+}
+
+IFACEMETHODIMP_(ULONG) TestExplorerCommandHandler::AddRef()
+{
+    return InterlockedIncrement(&_referenceCount);
+}
+
+IFACEMETHODIMP_(ULONG) TestExplorerCommandHandler::Release()
+{
+    ULONG cRef = InterlockedDecrement(&_referenceCount);
+    if (!cRef) {
+        delete this;
+    }
+    return cRef;
+}
+
 IFACEMETHODIMP TestExplorerCommandHandler::GetTitle(_In_opt_ IShellItemArray* items, _Outptr_result_nullonfailure_ PWSTR* name)
 {
     *name = nullptr;
@@ -40,8 +65,6 @@ winrt::fire_and_forget TestExplorerCommandHandler::InvokeAsync(_In_opt_ IShellIt
     winrt::com_ptr<IShellItemArray> selectionCopy;
     selectionCopy.copy_from(selection);
     winrt::agile_ref<IShellItemArray> agileSelectionCopy{ selectionCopy };
-
-    auto strongThis = get_strong(); // prevent destruction while coroutine is running
 
     co_await winrt::resume_background();
 

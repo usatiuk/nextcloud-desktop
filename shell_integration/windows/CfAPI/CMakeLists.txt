@@ -23,8 +23,7 @@ add_library(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} MODULE
 
 target_link_libraries(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} shlwapi)
 
-target_include_directories(${APPX_MANIFEST_SHELLEXT_TARGET_NAME}
-PRIVATE "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\winrt D:\\Windows Kits\\10\\Include\\10.0.22621.0\\ucrt D:\\Windows Kits\\10\\Include\\10.0.22621.0\\um D:\\Windows Kits\\10\\Include\\10.0.22621.0\\shared")
+target_include_directories(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} PRIVATE "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\winrt")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /await")
 

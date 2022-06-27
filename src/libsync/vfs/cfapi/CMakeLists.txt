@@ -32,6 +32,7 @@ if (WIN32)
     )
 
     target_compile_features(nextcloudsync_vfs_cfapi PRIVATE cxx_std_17)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /await")
 
     target_include_directories("nextcloudsync_vfs_cfapi" BEFORE PUBLIC ${CMAKE_CURRENT_BINARY_DIR} INTERFACE ${CMAKE_BINARY_DIR})
 

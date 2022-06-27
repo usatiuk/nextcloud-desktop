@@ -20,15 +20,17 @@
 #include <unknwn.h>
 #include "WinShellExtConstants.h"
 #include <winrt/base.h>
-#include <winrt\Windows.Foundation.h>
-#include <winrt\windows.foundation.collections.h>
-#include <winrt\windows.storage.provider.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/windows.foundation.collections.h>
+#include <winrt/windows.storage.provider.h>
 
 class __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
-    : public winrt::Windows::Storage::Provider::IStorageProviderItemPropertySource
+    : public winrt::implements<CustomStateProvider,
+          winrt::Windows::Storage::Provider::IStorageProviderItemPropertySource>
 {
 public:
     CustomStateProvider() = default;
+    virtual ~CustomStateProvider() = default;
     winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
     GetItemProperties(_In_ winrt::hstring const &itemPath);
 
@@ -37,6 +39,7 @@ public:
     IFACEMETHODIMP_(ULONG) AddRef();
 
     IFACEMETHODIMP_(ULONG) Release();
+
 private:
     long _referenceCount;
 };

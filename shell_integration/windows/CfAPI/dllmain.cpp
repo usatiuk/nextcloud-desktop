@@ -20,11 +20,19 @@
 #include <string>
 
 extern HRESULT ThumbnailProvider_CreateInstance(REFIID riid, void **ppv);
+extern HRESULT CustomStateProvider_CreateInstance(REFIID riid, void **ppv);
+extern HRESULT TestExplorerCommandHandler_CreateInstance(REFIID riid, void **ppv);
 
 static const CLSID SZ_CLSID_THUMBHANDLER = __uuidof(ThumbnailProvider); 
+static const CLSID SZ_CLSID_CUSTOMSTATEPOVIDER = __uuidof(CustomStateProvider); 
+static const CLSID SZ_CLSID_TESTEXPLORERCOMMANDHANDLER = __uuidof(TestExplorerCommandHandler); 
 
 // add classes supported by this module here
-const CLASS_OBJECT_INIT c_rgClassObjectInit[] = {{&SZ_CLSID_THUMBHANDLER, ThumbnailProvider_CreateInstance}};
+const CLASS_OBJECT_INIT c_rgClassObjectInit[] = {
+    {&SZ_CLSID_THUMBHANDLER, ThumbnailProvider_CreateInstance},
+    {&SZ_CLSID_CUSTOMSTATEPOVIDER, CustomStateProvider_CreateInstance},
+    {&SZ_CLSID_TESTEXPLORERCOMMANDHANDLER, TestExplorerCommandHandler_CreateInstance}
+};
 
 
 long dllReferenceCount = 0;
@@ -85,4 +93,32 @@ HRESULT ThumbnailProvider_CreateInstance(REFIID riid, void **ppv)
         thumbnailProvider->Release();
     }
     return hr;
+}
+
+HRESULT CustomStateProvider_CreateInstance(REFIID riid, void **ppv)
+{
+    HRESULT nResult2 = S_OK;
+    CustomStateProvider *pDispatch;
+    try {
+        nResult2 = CoCreateInstance(SZ_CLSID_CUSTOMSTATEPOVIDER, NULL, CLSCTX_INPROC_SERVER,
+            __uuidof(CustomStateProvider), (void **)&pDispatch);
+    } 
+    catch (_com_error exc) {
+        return exc.Error();
+    }
+    
+    return nResult2;
+}
+
+HRESULT TestExplorerCommandHandler_CreateInstance(REFIID riid, void **ppv)
+{
+    HRESULT nResult2 = S_OK;
+    CustomStateProvider *pDispatch;
+    try {
+        nResult2 = CoCreateInstance(SZ_CLSID_TESTEXPLORERCOMMANDHANDLER, NULL, CLSCTX_INPROC_SERVER,
+            __uuidof(CustomStateProvider), (void **)&pDispatch);
+    } catch (_com_error exc) {
+        return exc.Error();
+    }
+    return nResult2;
 }

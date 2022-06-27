@@ -14,7 +14,7 @@
 
 class __declspec(uuid(APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID)) TestExplorerCommandHandler
     : 
-    public winrt::implements<TestExplorerCommandHandler, IExplorerCommand, IObjectWithSite>
+    public IExplorerCommand, IObjectWithSite
 {
 public:
     // IExplorerCommand
@@ -33,7 +33,15 @@ public:
     IFACEMETHODIMP SetSite(_In_opt_ IUnknown *site);
     IFACEMETHODIMP GetSite(_In_ REFIID riid, _COM_Outptr_ void **site);
 
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
+
+    IFACEMETHODIMP_(ULONG) AddRef();
+
+    IFACEMETHODIMP_(ULONG) Release();
+
 private:
     winrt::com_ptr<IUnknown> _site;
     winrt::fire_and_forget InvokeAsync(_In_opt_ IShellItemArray* selection);
+
+    long _referenceCount;
 };

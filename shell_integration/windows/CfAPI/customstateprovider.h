@@ -19,22 +19,24 @@
 #include <comdef.h>
 #include <unknwn.h>
 #include "WinShellExtConstants.h"
-#include "customstateprovider.g.h"
-#include <windows.storage.provider.h>
+#include <winrt/base.h>
+#include <winrt\Windows.Foundation.h>
+#include <winrt\windows.foundation.collections.h>
+#include <winrt\windows.storage.provider.h>
 
-namespace winrt::CfApiShellIntegration::implementation {
-struct __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
-    : CustomStateProviderT<CustomStateProvider>
+class __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
+    : public winrt::Windows::Storage::Provider::IStorageProviderItemPropertySource
 {
+public:
     CustomStateProvider() = default;
+    winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
+    GetItemProperties(_In_ winrt::hstring const &itemPath);
 
-    Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
-    GetItemProperties(_In_ hstring const &itemPath);
-};
-}
+    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
 
-namespace winrt::CfApiShellIntegration::factory_implementation {
-struct CustomStateProvider : CustomStateProviderT<CustomStateProvider, implementation::CustomStateProvider>
-{
+    IFACEMETHODIMP_(ULONG) AddRef();
+
+    IFACEMETHODIMP_(ULONG) Release();
+private:
+    long _referenceCount;
 };
-}

@@ -19,24 +19,39 @@
 #include <locale>
 #include <codecvt>
 
-#include <winrt\Windows.Storage.Provider.h>
-#include <winrt\windows.foundation.collections.h>
-
-namespace winrt {
-using namespace winrt::Windows::Storage::Provider;
+IFACEMETHODIMP CustomStateProvider::QueryInterface(REFIID riid, void **ppv)
+{
+    static const QITAB qit[] = {
+        QITABENT(CustomStateProvider, GetGuid("8f6f9c3e-f632-4a9b-8d99-d2d7a11df56a")),
+        {0},
+    };
+    return QISearch(this, qit, riid, ppv);
 }
 
-namespace winrt::CfApiShellIntegration::implementation {
-Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
-CustomStateProvider::GetItemProperties(hstring const &itemPath)
+IFACEMETHODIMP_(ULONG) CustomStateProvider::AddRef()
+{
+    return InterlockedIncrement(&_referenceCount);
+}
+
+IFACEMETHODIMP_(ULONG) CustomStateProvider::Release()
+{
+    ULONG cRef = InterlockedDecrement(&_referenceCount);
+    if (!cRef) {
+        delete this;
+    }
+    return cRef;
+}
+
+winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
+CustomStateProvider::GetItemProperties(_In_ winrt::hstring const &itemPath)
 {
     std::hash<std::wstring> hashFunc;
     auto hash = hashFunc(itemPath.c_str());
 
-    std::vector<winrt::StorageProviderItemProperty> properties;
+    std::vector<winrt::Windows::Storage::Provider::StorageProviderItemProperty> properties;
 
     if ((hash & 0x1) != 0) {
-        winrt::StorageProviderItemProperty itemProperty;
+        winrt::Windows::Storage::Provider::StorageProviderItemProperty itemProperty;
         itemProperty.Id(2);
         itemProperty.Value(L"Value2");
         // This icon is just for the sample. You should provide your own branded icon here
@@ -45,5 +60,4 @@ CustomStateProvider::GetItemProperties(hstring const &itemPath)
     }
 
     return winrt::single_threaded_vector(std::move(properties));
-}
 }

@@ -14,6 +14,8 @@
 
 #pragma once
 
+#include "Generated/CfApiShellExtensions/CustomStateProvider.g.h"
+
 #include <shlwapi.h>
 #include <thumbcache.h>
 #include <comdef.h>
@@ -24,22 +26,21 @@
 #include <winrt/windows.foundation.collections.h>
 #include <winrt/windows.storage.provider.h>
 
-class __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
-    : public winrt::implements<CustomStateProvider,
-          winrt::Windows::Storage::Provider::IStorageProviderItemPropertySource>
+#include <windows.storage.provider.h>
+
+namespace winrt::CfApiShellExtensions::implementation {
+struct __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
+    : CustomStateProviderT<CustomStateProvider>
 {
-public:
     CustomStateProvider() = default;
-    virtual ~CustomStateProvider() = default;
-    winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
-    GetItemProperties(_In_ winrt::hstring const &itemPath);
 
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
-
-    IFACEMETHODIMP_(ULONG) AddRef();
-
-    IFACEMETHODIMP_(ULONG) Release();
-
-private:
-    long _referenceCount;
+    Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
+    GetItemProperties(_In_ hstring const &itemPath);
 };
+}
+
+namespace winrt::CfApiShellExtensions::factory_implementation {
+struct CustomStateProvider : CustomStateProviderT<CustomStateProvider, implementation::CustomStateProvider>
+{
+};
+}

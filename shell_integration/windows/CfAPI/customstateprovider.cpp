@@ -19,49 +19,21 @@
 #include <locale>
 #include <codecvt>
 
-#pragma push_macro("MIDL_CONST_ID")
-#if !defined(_MSC_VER) || (_MSC_VER >= 1910)
-#define MIDL_CONST_ID constexpr const
-#else
-#define MIDL_CONST_ID const __declspec(selectany)
-#endif
-
-MIDL_CONST_ID IID &IID_IStorageProviderItemPropertySource = {};
-
-IFACEMETHODIMP CustomStateProvider::QueryInterface(REFIID riid, void **ppv)
-{
-    MessageBox(NULL, L"Attach to DLL", L"CustomStateProvider::QueryInterface", MB_OK);
-    /*static const QITAB qit[] = {
-        QITABENT(CustomStateProvider, IID_IStorageProviderItemPropertySource),
-        {0},
-    };*/
-    return 1;
+namespace winrt {
+using namespace winrt::Windows::Storage::Provider;
 }
 
-IFACEMETHODIMP_(ULONG) CustomStateProvider::AddRef()
-{
-    return InterlockedIncrement(&_referenceCount);
-}
-
-IFACEMETHODIMP_(ULONG) CustomStateProvider::Release()
-{
-    ULONG cRef = InterlockedDecrement(&_referenceCount);
-    if (!cRef) {
-        delete this;
-    }
-    return cRef;
-}
-
-winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
-CustomStateProvider::GetItemProperties(_In_ winrt::hstring const &itemPath)
+namespace winrt::CfApiShellExtensions::implementation {
+Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
+CustomStateProvider::GetItemProperties(hstring const &itemPath)
 {
     std::hash<std::wstring> hashFunc;
     auto hash = hashFunc(itemPath.c_str());
 
-    std::vector<winrt::Windows::Storage::Provider::StorageProviderItemProperty> properties;
+    std::vector<winrt::StorageProviderItemProperty> properties;
 
     if ((hash & 0x1) != 0) {
-        winrt::Windows::Storage::Provider::StorageProviderItemProperty itemProperty;
+        winrt::StorageProviderItemProperty itemProperty;
         itemProperty.Id(2);
         itemProperty.Value(L"Value2");
         // This icon is just for the sample. You should provide your own branded icon here
@@ -70,4 +42,5 @@ CustomStateProvider::GetItemProperties(_In_ winrt::hstring const &itemPath)
     }
 
     return winrt::single_threaded_vector(std::move(properties));
+}
 }

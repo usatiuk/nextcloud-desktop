@@ -16,8 +16,9 @@
 #include "thumbnailprovider.h"
 #include "customstateprovider.h"
 #include "contextmenus.h"
-
+#include <winrt/windows.storage.provider.h>
 #include <string>
+#include <Unknwn.h>
 
 extern HRESULT ThumbnailProvider_CreateInstance(REFIID riid, void **ppv);
 extern HRESULT CustomStateProvider_CreateInstance(REFIID riid, void **ppv);
@@ -34,6 +35,26 @@ const CLASS_OBJECT_INIT c_rgClassObjectInit[] = {
     {&SZ_CLSID_TESTEXPLORERCOMMANDHANDLER, TestExplorerCommandHandler_CreateInstance}
 };
 
+template <typename T>
+class ClassFactory : public winrt::implements<ClassFactory<T>, IClassFactory>
+{
+public:
+    // IClassFactory
+    IFACEMETHODIMP CreateInstance(_In_opt_ IUnknown *unkOuter, REFIID riid, _COM_Outptr_ void **object)
+    {
+        try {
+            auto provider = winrt::make<T>();
+            winrt::com_ptr<IUnknown> unkn{provider.as<IUnknown>()};
+            winrt::check_hresult(unkn->QueryInterface(riid, object));
+            return S_OK;
+        } catch (...) {
+            // winrt::to_hresult() will eat the exception if it is a result of winrt::check_hresult,
+            // otherwise the exception will get rethrown and this method will crash out as it should
+            return winrt::to_hresult();
+        }
+    }
+    IFACEMETHODIMP LockServer(BOOL lock) { return S_OK; }
+};
 
 long dllReferenceCount = 0;
 
@@ -43,32 +64,13 @@ HINSTANCE instanceHandle = NULL;
 // Standard DLL functions
 STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void *)
 {
-    MessageBox(NULL, L"Attach to DLL", L"DllMain", MB_OK);
     if (dwReason == DLL_PROCESS_ATTACH) {
         instanceHandle = hInstance;
         DisableThreadLibraryCalls(hInstance);
     }
 
-    // Open a handle to the file
-    HANDLE hFile = CreateFile(L"D:\\work\\NextcloudTumbProvider.log.txt", // Filename
-        FILE_APPEND_DATA, // Desired access
-        FILE_SHARE_READ, // Share mode
-        NULL, // Security attributes
-        OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
-        FILE_ATTRIBUTE_NORMAL, // Flags and attributes
-        NULL); // Template file handle
-
-    // Write data to the file
-    std::string strText = "DllMain\n"; // For C use LPSTR (char*) or LPWSTR (wchar_t*)
-    DWORD bytesWritten;
-    WriteFile(hFile, // Handle to the file
-        strText.c_str(), // Buffer to write
-        strText.size(), // Buffer size
-        &bytesWritten, // Bytes written
-        nullptr); // Overlapped
-
-    // Close the handle once we don't need it.
-    CloseHandle(hFile);
+    std::string strText = "DllMain\n";
+    writeLog(strText);
 
     return TRUE;
 }
@@ -76,49 +78,154 @@ STDAPI_(BOOL) DllMain(HINSTANCE hInstance, DWORD dwReason, void *)
 STDAPI DllCanUnloadNow()
 {
     // Only allow the DLL to be unloaded after all outstanding references have been released
+    std::string strText = "DllCanUnloadNow dllReferenceCount: " + std::to_string(dllReferenceCount) + std::string("\n");
+    writeLog(strText);
     return (dllReferenceCount == 0) ? S_OK : S_FALSE;
 }
 
 STDAPI DllGetClassObject(REFCLSID clsid, REFIID riid, void **ppv)
 {
+    char clsidGuid[40] = {0};
+    sprintf(clsidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", clsid.Data1, clsid.Data2, clsid.Data3,
+        clsid.Data4[0], clsid.Data4[1], clsid.Data4[2], clsid.Data4[3], clsid.Data4[4], clsid.Data4[5], clsid.Data4[6],
+        clsid.Data4[7]);
+
+    char riidGuid[40] = {0};
+    sprintf(riidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", riid.Data1, riid.Data2, riid.Data3,
+        riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6],
+        riid.Data4[7]);
+
+    // Write data to the file
+    std::string strText = "DllGetClassObject clsidGuid: " + std::string(clsidGuid) + std::string(" riidGuid: ")
+        + std::string(riidGuid) + std::string("\n"); // For C use LPSTR (char*) or LPWSTR (wchar_t*)
+
+    writeLog(strText);
+
     return CfApiShellIntegrationClassFactory::CreateInstance(clsid, c_rgClassObjectInit, ARRAYSIZE(c_rgClassObjectInit), riid, ppv);
 }
 
 HRESULT ThumbnailProvider_CreateInstance(REFIID riid, void **ppv)
 {
-    ThumbnailProvider *thumbnailProvider = new (std::nothrow) ThumbnailProvider();
-    HRESULT hr = thumbnailProvider ? S_OK : E_OUTOFMEMORY;
-    if (SUCCEEDED(hr)) {
-        hr = thumbnailProvider->QueryInterface(riid, ppv);
-        thumbnailProvider->Release();
+    char riidGuid[40] = {0};
+    sprintf(riidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", riid.Data1, riid.Data2, riid.Data3,
+        riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6],
+        riid.Data4[7]);
+    std::string strText = "ThumbnailProvider_CreateInstance 1 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    writeLog(strText);
+
+    *ppv = NULL;
+
+    ThumbnailProvider *thumbnailProvider;
+    try {
+        thumbnailProvider = new ThumbnailProvider();
+        strText = "ThumbnailProvider_CreateInstance 2 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+    } catch (...) {
+        strText = "ThumbnailProvider_CreateInstance 3 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        return E_OUTOFMEMORY;
     }
-    return hr;
+
+    if (!thumbnailProvider) {
+        strText = "ThumbnailProvider_CreateInstance 4 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        return E_OUTOFMEMORY;
+    }
+
+    HRESULT res = thumbnailProvider->QueryInterface(riid, ppv);
+    if (res != S_OK) {
+        strText = "ThumbnailProvider_CreateInstance 5 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        delete thumbnailProvider;
+    }
+    strText = "ThumbnailProvider_CreateInstance 6 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    writeLog(strText);
+    return res;
 }
 
 HRESULT CustomStateProvider_CreateInstance(REFIID riid, void **ppv)
 {
-    HRESULT nResult2 = S_OK;
-    winrt::CfApiShellExtensions::implementation::CustomStateProvider *pDispatch;
+    char riidGuid[40] = {0};
+    sprintf(riidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", riid.Data1, riid.Data2, riid.Data3,
+        riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6],
+        riid.Data4[7]);
+    std::string strText = "CustomStateProvider_CreateInstance 1 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    writeLog(strText);
+    ppv = NULL;
+    return E_OUTOFMEMORY;
+    //MessageBox(NULL, L"Attach to DLL", L"CustomStateProvider_CreateInstance", MB_OK);
+    HRESULT hr = S_OK;
+    DWORD cookie;
     try {
-        nResult2 = CoCreateInstance(SZ_CLSID_CUSTOMSTATEPOVIDER, NULL, CLSCTX_INPROC_SERVER,
-            __uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider), (void **)&pDispatch);
+        IUnknown *pUnk = (IUnknown *)0xdeadbeef;
+        const IID &customStateProviderIID = __uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider);
+        HRESULT hr2 = CoGetClassObject(customStateProviderIID, CLSCTX_INPROC_SERVER, NULL, IID_IUnknown, (void **)&pUnk);
+
+        IUnknown *pUnk1 = (IUnknown *)0xdeadbeef;
+        HRESULT hr3 = CoGetClassObject(customStateProviderIID, CLSCTX_INPROC_SERVER, NULL,
+            ABI::Windows::Storage::Provider::IID_IStorageProviderItemPropertySource, (void **)&pUnk1);
+
+        hr2 = pUnk->QueryInterface(riid, ppv);
+
+        hr2 = pUnk->QueryInterface(ABI::Windows::Storage::Provider::IID_IStorageProviderItemPropertySource, ppv);
+
+        winrt::CfApiShellExtensions::implementation::CustomStateProvider *customStateProvider = nullptr;
+        hr = CoCreateInstance(__uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider), NULL,
+            CLSCTX_INPROC_SERVER, riid, ppv);
+
+        if (SUCCEEDED(hr)) {
+            hr = customStateProvider->QueryInterface(riid, ppv);
+            //customStateProvider->Release();
+        }
+        return hr;
     } 
     catch (_com_error exc) {
         return exc.Error();
     }
     
-    return nResult2;
+    return cookie;
 }
 
 HRESULT TestExplorerCommandHandler_CreateInstance(REFIID riid, void **ppv)
 {
-    HRESULT nResult2 = S_OK;
-    winrt::CfApiShellExtensions::implementation::CustomStateProvider *pDispatch;
+    char riidGuid[40] = {0};
+    sprintf(riidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", riid.Data1, riid.Data2, riid.Data3,
+        riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6],
+        riid.Data4[7]);
+    std::string strText = "TestExplorerCommandHandler_CreateInstance 1 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    writeLog(strText);
+
+    *ppv = NULL;
+
+    TestExplorerCommandHandler *testExplorerCommandHandler;
     try {
-        nResult2 = CoCreateInstance(SZ_CLSID_TESTEXPLORERCOMMANDHANDLER, NULL, CLSCTX_INPROC_SERVER,
-            __uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider), (void **)&pDispatch);
-    } catch (_com_error exc) {
-        return exc.Error();
+        testExplorerCommandHandler = new TestExplorerCommandHandler();
+        strText =
+            "TestExplorerCommandHandler_CreateInstance 2 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+    } catch (...) {
+        strText =
+            "TestExplorerCommandHandler_CreateInstance 3 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        return E_OUTOFMEMORY;
     }
-    return nResult2;
+
+    if (!testExplorerCommandHandler) {
+        strText =
+            "TestExplorerCommandHandler_CreateInstance 4 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        return E_OUTOFMEMORY;
+    }
+
+    HRESULT res = testExplorerCommandHandler->QueryInterface(riid, ppv);
+    if (res != S_OK) {
+        strText =
+            "TestExplorerCommandHandler_CreateInstance 5 riidGuid: " + std::string(riidGuid) + std::string("\n");
+        writeLog(strText);
+        delete testExplorerCommandHandler;
+    }
+    strText =
+        "TestExplorerCommandHandler_CreateInstance 6 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    writeLog(strText);
+    return res;
 }

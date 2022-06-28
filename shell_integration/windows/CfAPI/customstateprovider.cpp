@@ -43,4 +43,27 @@ CustomStateProvider::GetItemProperties(hstring const &itemPath)
 
     return winrt::single_threaded_vector(std::move(properties));
 }
+
+IFACEMETHODIMP CustomStateProvider::QueryInterface(REFIID riid, void **ppv)
+{
+    if (riid == __uuidof(IUnknown)) {
+        *ppv = this;
+        AddRef();
+        return S_OK;
+    }
+}
+
+IFACEMETHODIMP_(ULONG) CustomStateProvider::AddRef()
+{
+    return InterlockedIncrement(&_referenceCount);
+}
+
+IFACEMETHODIMP_(ULONG) CustomStateProvider::Release()
+{
+    ULONG cRef = InterlockedDecrement(&_referenceCount);
+    if (!cRef) {
+        delete this;
+    }
+    return cRef;
+}
 }

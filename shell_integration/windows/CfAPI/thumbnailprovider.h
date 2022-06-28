@@ -17,10 +17,13 @@
 #include <shlwapi.h>
 #include <thumbcache.h>
 #include <comdef.h>
+#include <string>
 #include "WinShellExtConstants.h"
 
 _COM_SMARTPTR_TYPEDEF(IShellItem2, IID_IShellItem2);
 _COM_SMARTPTR_TYPEDEF(IThumbnailProvider, IID_IThumbnailProvider);
+
+void writeLog(const std::string &log);
 
 class __declspec(uuid(APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID)) ThumbnailProvider : public IInitializeWithItem,
     public IThumbnailProvider

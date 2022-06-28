@@ -159,7 +159,7 @@ Result<Vfs::ConvertToPlaceholderResult, QString> VfsCfApi::convertToPlaceholder(
     if (cfapi::findPlaceholderInfo(handle)) {
         return cfapi::updatePlaceholderInfo(handle, item._modtime, item._size, item._fileId, replacesPath);
     } else {
-        return cfapi::convertToPlaceholder(handle, item._modtime, item._size, item._fileId, replacesPath);
+        return cfapi::convertToPlaceholder(localPath, item._modtime, item._size, item._fileId, replacesPath);
     }
 }
 

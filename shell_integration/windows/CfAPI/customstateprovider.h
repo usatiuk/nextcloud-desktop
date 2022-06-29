@@ -32,19 +32,11 @@ namespace winrt::CfApiShellExtensions::implementation {
 struct __declspec(uuid(APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID)) CustomStateProvider
     : CustomStateProviderT<CustomStateProvider>
 {
-    CustomStateProvider() = default;
-
+public:
+    CustomStateProvider();
+    virtual ~CustomStateProvider();
     Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
     GetItemProperties(_In_ hstring const &itemPath);
-
-    IFACEMETHODIMP QueryInterface(REFIID riid, void **ppv);
-
-    IFACEMETHODIMP_(ULONG) AddRef();
-
-    IFACEMETHODIMP_(ULONG) Release();
-
-private:
-    long _referenceCount;
 };
 }
 

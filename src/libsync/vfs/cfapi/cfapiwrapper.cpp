@@ -430,6 +430,16 @@ QString retrieveWindowsSid()
     return {};
 }
 
+void AddCustomState(
+    _In_ winrt::IVector<winrt::StorageProviderItemPropertyDefinition> &customStates, _In_ LPCWSTR displayNameResource,
+    _In_ int id)
+{
+    winrt::StorageProviderItemPropertyDefinition customState;
+    customState.DisplayNameResource(displayNameResource);
+    customState.Id(id);
+    customStates.Append(customState);
+}
+
 winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const QString &providerVersion,
     const QString &folderAlias, const QString &displayName, const QString &accountDisplayName,
     const QString &syncRootPath)
@@ -477,11 +487,11 @@ winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const 
         winrt::CryptographicBuffer::ConvertStringToBinary(syncRootIdentity.data(), winrt::BinaryStringEncoding::Utf8);
     info.Context(contextBuffer);
 
-    /*winrt::IVector<winrt::StorageProviderItemPropertyDefinition> customStates =
+    winrt::IVector<winrt::StorageProviderItemPropertyDefinition> customStates =
         info.StorageProviderItemPropertyDefinitions();
     AddCustomState(customStates, L"CustomStateName1", 1);
     AddCustomState(customStates, L"CustomStateName2", 2);
-    AddCustomState(customStates, L"CustomStateName3", 3);*/
+    AddCustomState(customStates, L"CustomStateName3", 3);
 
     winrt::StorageFolder folder{co_await winrt::StorageFolder::GetFolderFromPathAsync(syncRootPath.toStdWString())};
 
@@ -489,6 +499,7 @@ winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const 
 
     try {
         winrt::StorageProviderSyncRootManager::Register(info);
+        Sleep(1000);
     } catch (...) {
         throw;
     }

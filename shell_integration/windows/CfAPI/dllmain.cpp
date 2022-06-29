@@ -16,8 +16,12 @@
 #include "thumbnailprovider.h"
 #include "customstateprovider.h"
 #include "contextmenus.h"
+#include "logger.h"
+
 #include <winrt/windows.storage.provider.h>
 #include <string>
+#include <locale>
+#include <codecvt>
 #include <Unknwn.h>
 
 extern HRESULT ThumbnailProvider_CreateInstance(REFIID riid, void **ppv);
@@ -26,7 +30,7 @@ extern HRESULT TestExplorerCommandHandler_CreateInstance(REFIID riid, void **ppv
 
 static const CLSID SZ_CLSID_THUMBHANDLER = __uuidof(ThumbnailProvider); 
 static const CLSID SZ_CLSID_CUSTOMSTATEPOVIDER = __uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider);
-static const CLSID SZ_CLSID_TESTEXPLORERCOMMANDHANDLER = __uuidof(TestExplorerCommandHandler); 
+static const CLSID SZ_CLSID_TESTEXPLORERCOMMANDHANDLER = __uuidof(TestExplorerCommandHandler);
 
 // add classes supported by this module here
 const CLASS_OBJECT_INIT c_rgClassObjectInit[] = {
@@ -35,26 +39,7 @@ const CLASS_OBJECT_INIT c_rgClassObjectInit[] = {
     {&SZ_CLSID_TESTEXPLORERCOMMANDHANDLER, TestExplorerCommandHandler_CreateInstance}
 };
 
-template <typename T>
-class ClassFactory : public winrt::implements<ClassFactory<T>, IClassFactory>
-{
-public:
-    // IClassFactory
-    IFACEMETHODIMP CreateInstance(_In_opt_ IUnknown *unkOuter, REFIID riid, _COM_Outptr_ void **object)
-    {
-        try {
-            auto provider = winrt::make<T>();
-            winrt::com_ptr<IUnknown> unkn{provider.as<IUnknown>()};
-            winrt::check_hresult(unkn->QueryInterface(riid, object));
-            return S_OK;
-        } catch (...) {
-            // winrt::to_hresult() will eat the exception if it is a result of winrt::check_hresult,
-            // otherwise the exception will get rethrown and this method will crash out as it should
-            return winrt::to_hresult();
-        }
-    }
-    IFACEMETHODIMP LockServer(BOOL lock) { return S_OK; }
-};
+winrt::com_ptr<winrt::CfApiShellExtensions::implementation::CustomStateProvider> stateProvider;
 
 long dllReferenceCount = 0;
 
@@ -149,41 +134,23 @@ HRESULT CustomStateProvider_CreateInstance(REFIID riid, void **ppv)
     sprintf(riidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", riid.Data1, riid.Data2, riid.Data3,
         riid.Data4[0], riid.Data4[1], riid.Data4[2], riid.Data4[3], riid.Data4[4], riid.Data4[5], riid.Data4[6],
         riid.Data4[7]);
-    std::string strText = "CustomStateProvider_CreateInstance 1 riidGuid: " + std::string(riidGuid) + std::string("\n");
+    std::string strText = "CustomStateProvider_CreateInstance riidGuid: " + std::string(riidGuid) + std::string("\n");
     writeLog(strText);
-    ppv = NULL;
-    return E_OUTOFMEMORY;
-    //MessageBox(NULL, L"Attach to DLL", L"CustomStateProvider_CreateInstance", MB_OK);
-    HRESULT hr = S_OK;
+
     DWORD cookie;
     try {
-        IUnknown *pUnk = (IUnknown *)0xdeadbeef;
-        const IID &customStateProviderIID = __uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider);
-        HRESULT hr2 = CoGetClassObject(customStateProviderIID, CLSCTX_INPROC_SERVER, NULL, IID_IUnknown, (void **)&pUnk);
+        auto customStateProviderInstance = winrt::make_self<winrt::CfApiShellExtensions::implementation::CustomStateProvider>();
+        winrt::check_hresult(customStateProviderInstance->QueryInterface(riid, ppv));
 
-        IUnknown *pUnk1 = (IUnknown *)0xdeadbeef;
-        HRESULT hr3 = CoGetClassObject(customStateProviderIID, CLSCTX_INPROC_SERVER, NULL,
-            ABI::Windows::Storage::Provider::IID_IStorageProviderItemPropertySource, (void **)&pUnk1);
-
-        hr2 = pUnk->QueryInterface(riid, ppv);
-
-        hr2 = pUnk->QueryInterface(ABI::Windows::Storage::Provider::IID_IStorageProviderItemPropertySource, ppv);
-
-        winrt::CfApiShellExtensions::implementation::CustomStateProvider *customStateProvider = nullptr;
-        hr = CoCreateInstance(__uuidof(winrt::CfApiShellExtensions::implementation::CustomStateProvider), NULL,
-            CLSCTX_INPROC_SERVER, riid, ppv);
-
-        if (SUCCEEDED(hr)) {
-            hr = customStateProvider->QueryInterface(riid, ppv);
-            //customStateProvider->Release();
-        }
-        return hr;
+        return S_OK;
     } 
     catch (_com_error exc) {
+        using convert_type = std::codecvt_utf8<wchar_t>;
+        std::wstring_convert<convert_type, wchar_t> converter;
+        std::string converted_str = converter.to_bytes(std::wstring(exc.ErrorMessage()));
+        writeLog(std::string("Error: ") + std::to_string(exc.Error()) + std::string(" ") + converted_str);
         return exc.Error();
     }
-    
-    return cookie;
 }
 
 HRESULT TestExplorerCommandHandler_CreateInstance(REFIID riid, void **ppv)

@@ -13,57 +13,54 @@
  */
 
 #include "customstateprovider.h"
+#include "logger.h"
 
 #include <Shlguid.h>
 #include <string>
 #include <locale>
 #include <codecvt>
 
-namespace winrt {
-using namespace winrt::Windows::Storage::Provider;
+namespace winrt::CfApiShellExtensions::implementation {
+
+CustomStateProvider::CustomStateProvider()
+{
+    writeLog(std::string("CustomStateProvider::CustomStateProvider()"));
 }
 
-namespace winrt::CfApiShellExtensions::implementation {
-Windows::Foundation::Collections::IIterable<Windows::Storage::Provider::StorageProviderItemProperty>
+CustomStateProvider::~CustomStateProvider()
+{
+    writeLog(std::string("CustomStateProvider::~CustomStateProvider()"));
+}
+
+winrt::Windows::Foundation::Collections::IIterable<winrt::Windows::Storage::Provider::StorageProviderItemProperty>
 CustomStateProvider::GetItemProperties(hstring const &itemPath)
 {
     std::hash<std::wstring> hashFunc;
     auto hash = hashFunc(itemPath.c_str());
 
-    std::vector<winrt::StorageProviderItemProperty> properties;
+    std::vector<winrt::Windows::Storage::Provider::StorageProviderItemProperty> properties;
+
+    const auto itemPathString = winrt::to_string(itemPath);
+    if (itemPathString.find(std::string(".sync_")) != std::string::npos
+        || itemPathString.find(std::string(".owncloudsync.log")) != std::string::npos) {
+        return winrt::single_threaded_vector(std::move(properties));
+    }
+
+    std::string iconResourceLog;
 
     if ((hash & 0x1) != 0) {
-        winrt::StorageProviderItemProperty itemProperty;
+        winrt::Windows::Storage::Provider::StorageProviderItemProperty itemProperty;
         itemProperty.Id(2);
         itemProperty.Value(L"Value2");
         // This icon is just for the sample. You should provide your own branded icon here
         itemProperty.IconResource(L"shell32.dll,-14");
+        iconResourceLog = winrt::to_string(itemProperty.IconResource());
         properties.push_back(std::move(itemProperty));
     }
 
+    writeLog(std::string("CustomStateProvider::GetItemProperties itemPath: ") + itemPathString
+        + std::string(" IconResource: ") + iconResourceLog);
+
     return winrt::single_threaded_vector(std::move(properties));
-}
-
-IFACEMETHODIMP CustomStateProvider::QueryInterface(REFIID riid, void **ppv)
-{
-    if (riid == __uuidof(IUnknown)) {
-        *ppv = this;
-        AddRef();
-        return S_OK;
-    }
-}
-
-IFACEMETHODIMP_(ULONG) CustomStateProvider::AddRef()
-{
-    return InterlockedIncrement(&_referenceCount);
-}
-
-IFACEMETHODIMP_(ULONG) CustomStateProvider::Release()
-{
-    ULONG cRef = InterlockedDecrement(&_referenceCount);
-    if (!cRef) {
-        delete this;
-    }
-    return cRef;
 }
 }

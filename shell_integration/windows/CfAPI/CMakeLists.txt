@@ -31,12 +31,13 @@ add_library(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} MODULE
     thumbnailprovider.cpp
     contextmenus.cpp
     customstateprovider.cpp
+    logger.cpp
     CfApiShellIntegration.def
 )
 
 add_dependencies(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} CustomStateProviderImpl)
 
-target_link_libraries(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} shlwapi)
+target_link_libraries(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} shlwapi RuntimeObject)
 
 target_include_directories(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} PRIVATE "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\winrt")
 target_include_directories(${APPX_MANIFEST_SHELLEXT_TARGET_NAME} PRIVATE ${GeneratedDirBackSlash})

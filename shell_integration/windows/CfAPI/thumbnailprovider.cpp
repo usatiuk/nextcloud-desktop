@@ -13,35 +13,13 @@
  */
 
 #include "thumbnailprovider.h"
+#include "logger.h"
 
 #include <Shlguid.h>
 #include <locale>
 #include <codecvt>
 
 using convert_type = std::codecvt_utf8<wchar_t>;
-
-void writeLog(const std::string &log)
-{
-    HANDLE hFile = CreateFile(L"D:\\work\\NextcloudTumbProvider.log.txt", // Filename
-        FILE_APPEND_DATA, // Desired access
-        FILE_SHARE_READ, // Share mode
-        NULL, // Security attributes
-        OPEN_ALWAYS, // Creates a new file, only if it doesn't already exist
-        FILE_ATTRIBUTE_NORMAL, // Flags and attributes
-        NULL); // Template file handle
-
-    // Write data to the file
-    DWORD bytesWritten;
-    WriteFile(hFile, // Handle to the file
-        (log + std::string("\n")).c_str(), // Buffer to write
-        log.size() + 1, // Buffer size
-        &bytesWritten, // Bytes written
-        nullptr); // Overlapped
-
-    // Close the handle once we don't need it.
-    CloseHandle(hFile);
-}
-
 
 inline void throw_if_fail(HRESULT hr)
 {

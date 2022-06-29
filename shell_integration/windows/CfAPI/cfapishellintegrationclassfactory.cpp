@@ -16,13 +16,12 @@
 
 #include <new>
 
-#include "thumbnailprovider.h"
+#include "logger.h"
 
 extern long dllReferenceCount;
 
 HRESULT CfApiShellIntegrationClassFactory::CreateInstance(REFCLSID clsid, const CLASS_OBJECT_INIT *pClassObjectInits, size_t cClassObjectInits, REFIID riid, void **ppv)
 {
-    *ppv = NULL;
     char clsidGuid[40] = {0};
     sprintf(clsidGuid, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}", clsid.Data1, clsid.Data2, clsid.Data3,
         clsid.Data4[0], clsid.Data4[1], clsid.Data4[2], clsid.Data4[3], clsid.Data4[4], clsid.Data4[5], clsid.Data4[6],

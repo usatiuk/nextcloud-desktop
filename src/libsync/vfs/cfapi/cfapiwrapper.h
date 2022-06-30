@@ -72,6 +72,8 @@ private:
     std::unique_ptr<CF_PLACEHOLDER_BASIC_INFO, Deleter> _data;
 };
 
+NEXTCLOUD_CFAPI_EXPORT void InitAndStartServiceTask();
+
 NEXTCLOUD_CFAPI_EXPORT Result<void, QString> registerSyncRoot(const QString &path, const QString &providerName, const QString &providerVersion, const QString &folderAlias, const QString &displayName, const QString &accountDisplayName);
 NEXTCLOUD_CFAPI_EXPORT Result<void, QString> unregisterSyncRoot(const QString &path, const QString &providerName, const QString &folderAlias, const QString &accountDisplayName);
 

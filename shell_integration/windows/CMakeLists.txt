@@ -8,7 +8,7 @@ include_directories(
 )
 configure_file(WinShellExtConstants.h.in ${CMAKE_CURRENT_BINARY_DIR}/WinShellExtConstants.h)
 
-add_subdirectory(CfAPI)
+#add_subdirectory(CfAPI)
 add_subdirectory(NCContextMenu)
 add_subdirectory(NCOverlays)
 add_subdirectory(NCUtil)

@@ -47,15 +47,15 @@
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:SurrogateServer  DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@">
-              <com:Class Id="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
-            </com:SurrogateServer>
-            <com:SurrogateServer  DisplayName="Cloud Mirror Command Handler">
-              <com:Class Id="@APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
-            </com:SurrogateServer>
-            <com:SurrogateServer  DisplayName="Cloud Mirror Custom State Handler">
-              <com:Class Id="@APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID@" Path="@APPX_MANIFEST_SHELLEXT_DLL_FOLDER@/@APPX_MANIFEST_SHELLEXT_TARGET_NAME@.dll" ThreadingModel="STA"/>
-            </com:SurrogateServer>
+            <com:ExeServer DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@" Executable="nextcloud.exe">
+              <com:Class Id="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@"/>
+            </com:ExeServer>
+            <com:ExeServer  DisplayName="Cloud Mirror Command Handler" Executable="nextcloud.exe">
+              <com:Class Id="@APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID@"/>
+            </com:ExeServer>
+            <com:ExeServer  DisplayName="Cloud Mirror Custom State Handler" Executable="nextcloud.exe">
+              <com:Class Id="@APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID@"/>
+            </com:ExeServer>
         </com:ComServer>
         </com:Extension>
       </Extensions>

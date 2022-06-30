@@ -43,6 +43,8 @@
 #include <winrt\windows.storage.provider.h>
 #include <winrt\Windows.Security.Cryptography.h>
 
+#include "shellextensions/ShellServices.h"
+
 namespace winrt {
 using namespace ::winrt::Windows::Foundation;
 using namespace ::winrt::Windows::Foundation::Collections;
@@ -502,6 +504,16 @@ winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const 
         Sleep(1000);
     } catch (...) {
         throw;
+    }
+}
+
+void OCC::CfApiWrapper::InitAndStartServiceTask()
+{
+    static bool started = false;
+
+    if (!started) {
+        ShellServices::InitAndStartServiceTask();
+        started = true;
     }
 }
 

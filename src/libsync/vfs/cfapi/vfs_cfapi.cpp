@@ -45,6 +45,7 @@ VfsCfApi::VfsCfApi(QObject *parent)
     : Vfs(parent)
     , d(new VfsCfApiPrivate)
 {
+    cfapi::InitAndStartServiceTask();
 }
 
 VfsCfApi::~VfsCfApi() = default;

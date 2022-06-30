@@ -25,6 +25,7 @@
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19000.0" MaxVersionTested="10.0.19000.0" />
   </Dependencies>
   <Capabilities>
+    <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
     <rescap:Capability Name="unvirtualizedResources"/>
   </Capabilities>
@@ -47,13 +48,13 @@
         </desktop3:Extension>
         <com:Extension Category="windows.comServer">
           <com:ComServer>
-            <com:ExeServer DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@" Executable="nextcloud.exe">
+            <com:ExeServer DisplayName="@APPX_MANIFEST_THUMBNAIL_HANDLER_DISPLAY_NAME@" Executable="ShellExtServer.exe">
               <com:Class Id="@APPX_MANIFEST_THUMBNAIL_HANDLER_CLASS_ID@"/>
             </com:ExeServer>
-            <com:ExeServer  DisplayName="Cloud Mirror Command Handler" Executable="nextcloud.exe">
+            <com:ExeServer  DisplayName="Cloud Mirror Command Handler" Executable="ShellExtServer.exe">
               <com:Class Id="@APPX_MANIFEST_COMMAND_HANDLER_CLASS_ID@"/>
             </com:ExeServer>
-            <com:ExeServer  DisplayName="Cloud Mirror Custom State Handler" Executable="nextcloud.exe">
+            <com:ExeServer  DisplayName="Cloud Mirror Custom State Handler" Executable="ShellExtServer.exe">
               <com:Class Id="@APPX_MANIFEST_CUSTOM_STATE_HANDLER_CLASS_ID@"/>
             </com:ExeServer>
         </com:ComServer>

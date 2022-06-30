@@ -512,7 +512,7 @@ void OCC::CfApiWrapper::InitAndStartServiceTask()
     static bool started = false;
 
     if (!started) {
-        ShellServices::InitAndStartServiceTask();
+        //ShellServices::InitAndStartServiceTask();
         started = true;
     }
 }

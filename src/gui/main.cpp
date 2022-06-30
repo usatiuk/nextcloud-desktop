@@ -37,6 +37,11 @@
 #include "updater/updater.h"
 #endif
 
+#include <Unknwn.h>
+#include <winrt/base.h>
+
+#include "shellextensions/ShellServices.h"
+
 #ifdef Q_OS_WIN
 #include <appmodel.h>
 #endif
@@ -70,6 +75,8 @@ int main(int argc, char **argv)
 #endif
     Q_INIT_RESOURCE(resources);
     Q_INIT_RESOURCE(theme);
+
+    //ShellServices::InitAndStartServiceTask();
 
     qmlRegisterType<SyncStatusSummary>("com.nextcloud.desktopclient", 1, 0, "SyncStatusSummary");
     qmlRegisterType<EmojiModel>("com.nextcloud.desktopclient", 1, 0, "EmojiModel");

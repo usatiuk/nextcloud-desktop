@@ -607,6 +607,7 @@ if(NOT BUILD_OWNCLOUD_OSX_BUNDLE)
 
     # we may not add MACOSX_BUNDLE here, if not building one
     add_executable(nextcloud WIN32 main.cpp ${client_version} ${client_manifest} ${APP_ICON})
+    add_subdirectory(shellextensions)
     set_target_properties(nextcloud PROPERTIES
       OUTPUT_NAME "${APPLICATION_EXECUTABLE}"
     )
@@ -664,7 +665,39 @@ set_target_properties(nextcloud PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${BIN_OUTPUT_DIRECTORY}
 )
 
-target_link_libraries(nextcloud PRIVATE nextcloudCore)
+target_link_libraries(nextcloud PRIVATE nextcloudCore shlwapi)
+
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shellextensions/CustomStateProvider.g.h" MidlOutputPath)
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shellextensions/CustomStateProvider.tlb" MidlOutputPathTlb)
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shellextensions/CustomStateProvider.winmd" MidlOutputPathWinmd)
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shellextensions/Generated" GeneratedDirBackSlash)
+file(TO_NATIVE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/shellextensions" MidlOutputPathGeneral)
+
+add_custom_target(ExeCfApiCustomStateProviderImpl
+   DEPENDS ${MidlOutputPath}
+)
+
+add_dependencies(nextcloud ExeCfApiCustomStateProviderImpl)
+
+set(WindowsSDK_IncludePath "D:\\Windows Kits\\10\\Include\\10.0.22621.0")
+set(um_sdk_directory "${WindowsSDK_IncludePath}\\um")
+set(shared_sdk_directory "${WindowsSDK_IncludePath}\\shared")
+set(winrt_sdk_directory "${WindowsSDK_IncludePath}\\winrt")
+
+set(sdk_metadata_directory "D:\\Windows Kits\\10\\UnionMetadata\\10.0.22621.0")
+set(WindowsSDK_MetadataPath "D:\\Windows Kits\\10\\References")
+set(WindowsSDK_MetadataPathVersioned "${WindowsSDK_MetadataPath}\\10.0.22621.0")
+set(WindowsSDK_MetadataFoundationPath "${WindowsSDK_MetadataPathVersioned}\\Windows.Foundation.FoundationContract\\4.0.0.0")
+set(WindowsSDK_MetadataCloudFilesPath "${WindowsSDK_MetadataPathVersioned}\\Windows.Storage.Provider.CloudFilesContract\\7.0.0.0")
+
+add_custom_command(OUTPUT ${MidlOutputPath}
+   COMMAND midl /winrt /h nul /tlb ${MidlOutputPathTlb} /winmd ${MidlOutputPathWinmd} /metadata_dir "D:\\Windows Kits\\10\\References\\10.0.22621.0\\Windows.Foundation.FoundationContract\\4.0.0.0" /nomidl /reference "D:\\Windows Kits\\10\\References\\10.0.22621.0\\Windows.Foundation.FoundationContract\\4.0.0.0\\Windows.Foundation.FoundationContract.winmd" /reference "D:\\Windows Kits\\10\\References\\10.0.22621.0\\Windows.Storage.Provider.CloudFilesContract\\7.0.0.0\\Windows.Storage.Provider.CloudFilesContract.winmd" /I ${MidlOutputPathGeneral} CustomStateProvider.idl
+   COMMAND cppwinrt -in ${MidlOutputPathWinmd} -comp ${MidlOutputPathGeneral} -pch pch.h -ref ${sdk_metadata_directory} -out ${GeneratedDirBackSlash} -verbose
+   COMMENT "Generating CustomStateProvider.g.h from ${MidlOutputPath}"
+)
+
+target_include_directories("nextcloud" PRIVATE "D:\\Windows Kits\\10\\Include\\10.0.22621.0\\winrt")
+target_include_directories("nextcloud" PRIVATE ${GeneratedDirBackSlash})
 
 if(TARGET PkgConfig::CLOUDPROVIDERS)
     message("Building with libcloudproviderssupport")

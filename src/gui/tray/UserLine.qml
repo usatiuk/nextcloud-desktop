@@ -128,8 +128,7 @@ MenuItem {
                     }
                     Label {
                         id: accountServer
-                        width: Style.currentAccountLabelWidth
-                        height: Style.topLinePixelSize
+                        width: parent.width
                         text: server
                         elide: Text.ElideRight
                         color: Style.ncTextColor

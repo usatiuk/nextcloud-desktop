@@ -496,6 +496,7 @@ void Folder::startVfs()
 
     VfsSetupParams vfsParams;
     vfsParams.filesystemPath = path();
+    vfsParams.navigationPaneClsid = navigationPaneClsid().toString();
     vfsParams.displayName = shortGuiRemotePathOrAppName();
     vfsParams.alias = alias();
     vfsParams.remotePath = remotePathTrailingSlash();

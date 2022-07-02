@@ -98,12 +98,11 @@ QString VfsCfApi::fileSuffix() const
 
 void VfsCfApi::startImpl(const VfsSetupParams &params)
 {
-    cfapi::UregisterShellServices();
     cfapi::RegisterShellServices();
 
     const auto localPath = QDir::toNativeSeparators(params.filesystemPath);
 
-    const auto registerResult = cfapi::registerSyncRoot(localPath, params.providerName, params.providerVersion, params.alias, params.displayName, params.account->displayName());
+    const auto registerResult = cfapi::registerSyncRoot(localPath, params.providerName, params.providerVersion, params.alias, params.navigationPaneClsid, params.displayName, params.account->displayName());
     if (!registerResult) {
         qCCritical(lcCfApi) << "Initialization failed, couldn't register sync root:" << registerResult.error();
         return;

@@ -442,8 +442,55 @@ void AddCustomState(
     customStates.Append(customState);
 }
 
+bool createSyncRootRegistryKeys(const QString &providerName, const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName)
+{
+    // We must set specific Registry keys to make the progress bar refresh correctly and also add status icons into Windows Explorer
+    // More about this here: https://docs.microsoft.com/en-us/windows/win32/shell/integrate-cloud-storage
+    const auto windowsSid = retrieveWindowsSid();
+    Q_ASSERT(!windowsSid.isEmpty());
+    if (windowsSid.isEmpty()) {
+        qCWarning(lcCfApiWrapper) << "Failed to set Registry keys for shell integration, as windowsSid is empty. Progress bar will not work.";
+        return false;
+    }
+
+    // syncRootId should be: [storage provider ID]![Windows SID]![Account ID]![FolderAlias] (FolderAlias is a custom part added here to be able to register multiple sync folders for the same account)
+    // folder registry keys go like: Nextcloud!S-1-5-21-2096452760-2617351404-2281157308-1001!user@nextcloud.lan:8080!0, Nextcloud!S-1-5-21-2096452760-2617351404-2281157308-1001!user@nextcloud.lan:8080!1, etc. for each sync folder
+    const auto syncRootId = QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
+
+    const QString providerSyncRootIdRegistryKey = QStringLiteral(R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SyncRootManager\)") + syncRootId;
+
+    struct RegistryKeyInfo {
+        QString subKey;
+        QString valueName;
+        int type;
+        QVariant value;
+    };
+
+    const auto flags = OCC::Theme::instance()->enforceVirtualFilesSyncFolder() ? syncRootFlagsNoCfApiContextMenu : syncRootFlagsFull;
+
+    const QVector<RegistryKeyInfo> registryKeysToSet = {
+        {providerSyncRootIdRegistryKey, QStringLiteral("MenuVerbHandler_0"),  REG_SZ, QString("{165cd069-d9c8-42b4-8e37-b6971afa4495}")},
+        {providerSyncRootIdRegistryKey, QStringLiteral("ThumbnailProvider"),  REG_SZ, QString("{F137128F-A873-498A-867F-3637045ECE20}")},
+        {providerSyncRootIdRegistryKey, QStringLiteral("CustomStateHandler"), REG_SZ, QString("{f0c9de6c-6c76-44d7-a58e-579cdf7af264}")},
+        {providerSyncRootIdRegistryKey, QStringLiteral("NamespaceCLSID"),     REG_SZ, QString(navigationPaneClsid)}
+    };
+
+    for (const auto &registryKeyToSet : qAsConst(registryKeysToSet)) {
+        if (!OCC::Utility::registrySetKeyValue(HKEY_LOCAL_MACHINE, registryKeyToSet.subKey, registryKeyToSet.valueName, registryKeyToSet.type, registryKeyToSet.value)) {
+            qCWarning(lcCfApiWrapper) << "Failed to set Registry keys for shell integration. Explorer integration will not work.";
+            const auto deleteKeyResult = OCC::Utility::registryDeleteKeyTree(HKEY_LOCAL_MACHINE, providerSyncRootIdRegistryKey);
+            Q_ASSERT(!deleteKeyResult);
+            return false;
+        }
+    }
+
+    qCInfo(lcCfApiWrapper) << "Successfully set Registry keys for shell integration at:" << providerSyncRootIdRegistryKey << ". Explorer integration and progress bar will work.";
+
+    return true;
+}
+
 winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const QString &providerVersion,
-    const QString &folderAlias, const QString &displayName, const QString &accountDisplayName,
+    const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName,
     const QString &syncRootPath)
 {
     const auto windowsSid = retrieveWindowsSid();
@@ -501,6 +548,7 @@ winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const 
 
     try {
         winrt::StorageProviderSyncRootManager::Register(info);
+        createSyncRootRegistryKeys(providerName, folderAlias, navigationPaneClsid, displayName, accountDisplayName);
         Sleep(1000);
     } catch (...) {
         throw;
@@ -517,7 +565,7 @@ void OCC::CfApiWrapper::InitAndStartServiceTask()
     }
 }
 
-OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &path, const QString &providerName, const QString &providerVersion, const QString &folderAlias, const QString &displayName, const QString &accountDisplayName)
+OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &path, const QString &providerName, const QString &providerVersion, const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName)
 {
     const auto windowsSid = retrieveWindowsSid();
     Q_ASSERT(!windowsSid.isEmpty());
@@ -540,7 +588,7 @@ OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &pa
 
     try {
         QEventLoop loop;
-        registerSyncRootAndShell(providerName, providerVersion, folderAlias, displayName, accountDisplayName, path).Completed([&](auto &&...) {
+        registerSyncRootAndShell(providerName, providerVersion, folderAlias, navigationPaneClsid, displayName, accountDisplayName, path).Completed([&](auto &&...) {
             loop.exit(); 
         });
         loop.exec();

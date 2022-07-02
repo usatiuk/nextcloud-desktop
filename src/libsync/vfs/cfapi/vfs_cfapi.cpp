@@ -26,10 +26,46 @@
 #include <cfapi.h>
 #include <comdef.h>
 
+#include "common/utility.h"
+
 Q_LOGGING_CATEGORY(lcCfApi, "nextcloud.sync.vfs.cfapi", QtInfoMsg)
 
 namespace cfapi {
 using namespace OCC::CfApiWrapper;
+
+bool RegisterShellServices()
+{
+    bool result = true;
+    const QString value("D:\\work\\nextcloud\\desktop\\out\\build\\x64-Debug\\bin\\ShellExtServer.exe");
+
+    QString clsidPath = QString() % R"(Software\Classes\CLSID\{F137128F-A873-498A-867F-3637045ECE20}\LocalServer32)";
+    result = OCC::Utility::registrySetKeyValue(HKEY_CURRENT_USER, clsidPath, {}, REG_SZ, value);
+
+    clsidPath = QString() % R"(Software\Classes\CLSID\{f0c9de6c-6c76-44d7-a58e-579cdf7af264}\LocalServer32)";
+    result = OCC::Utility::registrySetKeyValue(HKEY_CURRENT_USER, clsidPath, {}, REG_SZ, value);
+
+    clsidPath = QString() % R"(Software\Classes\CLSID\{165cd069-d9c8-42b4-8e37-b6971afa4495}\LocalServer32)";
+    result = OCC::Utility::registrySetKeyValue(HKEY_CURRENT_USER, clsidPath, {}, REG_SZ, value);
+
+  return result;
+}
+
+bool UregisterShellServices()
+{
+    bool result = true;
+    const QString value("D:\\work\\nextcloud\\desktop\\out\\build\\x64-Debug\\bin\\ShellExtServer.exe");
+
+    QString clsidPath = QString() % R"(Software\Classes\CLSID\{F137128F-A873-498A-867F-3637045ECE20})";
+    result = OCC::Utility::registryDeleteKeyTree(HKEY_CURRENT_USER, clsidPath);
+
+    clsidPath = QString() % R"(Software\Classes\CLSID\{f0c9de6c-6c76-44d7-a58e-579cdf7af264})";
+    result = OCC::Utility::registryDeleteKeyTree(HKEY_CURRENT_USER, clsidPath);
+
+    clsidPath = QString() % R"(Software\Classes\CLSID\{165cd069-d9c8-42b4-8e37-b6971afa4495})";
+    result = OCC::Utility::registryDeleteKeyTree(HKEY_CURRENT_USER, clsidPath);
+
+    return result;
+}
 }
 
 namespace OCC {
@@ -56,12 +92,15 @@ Vfs::Mode VfsCfApi::mode() const
 }
 
 QString VfsCfApi::fileSuffix() const
-{
+{ 
     return {};
 }
 
 void VfsCfApi::startImpl(const VfsSetupParams &params)
 {
+    cfapi::UregisterShellServices();
+    cfapi::RegisterShellServices();
+
     const auto localPath = QDir::toNativeSeparators(params.filesystemPath);
 
     const auto registerResult = cfapi::registerSyncRoot(localPath, params.providerName, params.providerVersion, params.alias, params.displayName, params.account->displayName());

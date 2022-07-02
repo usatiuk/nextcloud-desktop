@@ -20,15 +20,14 @@
 
 IFACEMETHODIMP ThumbnailProvider::Initialize(_In_ IShellItem *item, _In_ DWORD mode)
 {
-    // MessageBox(NULL, L"Attach to DLL", L"Attach Now", MB_OK);
-
+    //MessageBox(NULL, L"Attach to DLL", L"Attach Now", MB_OK);
     try {
         winrt::check_hresult((item->QueryInterface(__uuidof(_itemDest), reinterpret_cast<void **>(&_itemDest))));
 
         LPWSTR pszName = NULL;
         winrt::check_hresult(_itemDest->GetDisplayName(SIGDN_FILESYSPATH, &pszName));
 
-        std::wstring sourceItem = L"D:\\work\\cloud-sample\\server\\bird-g272205618_640.jpg";
+        std::wstring sourceItem = L"D:\\work\\cloud-sample\\server\\hd-wallpaper-g5b8d06472_640.jpg";
 
         IShellItem *pShellItem = 0;
 

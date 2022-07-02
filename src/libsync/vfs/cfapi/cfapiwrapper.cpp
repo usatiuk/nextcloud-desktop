@@ -442,7 +442,7 @@ void AddCustomState(
     customStates.Append(customState);
 }
 
-bool createSyncRootRegistryKeys(const QString &providerName, const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName)
+bool createSyncRootRegistryKeys(const QString &providerName, const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName, const QString &syncRootPath)
 {
     // We must set specific Registry keys to make the progress bar refresh correctly and also add status icons into Windows Explorer
     // More about this here: https://docs.microsoft.com/en-us/windows/win32/shell/integrate-cloud-storage
@@ -458,6 +458,7 @@ bool createSyncRootRegistryKeys(const QString &providerName, const QString &fold
     const auto syncRootId = QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
 
     const QString providerSyncRootIdRegistryKey = QStringLiteral(R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SyncRootManager\)") + syncRootId;
+    const QString providerSyncRootIdUserSyncRootsRegistryKey = providerSyncRootIdRegistryKey + QStringLiteral(R"(\UserSyncRoots\)");
 
     struct RegistryKeyInfo {
         QString subKey;
@@ -469,6 +470,10 @@ bool createSyncRootRegistryKeys(const QString &providerName, const QString &fold
     const auto flags = OCC::Theme::instance()->enforceVirtualFilesSyncFolder() ? syncRootFlagsNoCfApiContextMenu : syncRootFlagsFull;
 
     const QVector<RegistryKeyInfo> registryKeysToSet = {
+        { providerSyncRootIdRegistryKey, QStringLiteral("Flags"), REG_DWORD, flags },
+        { providerSyncRootIdRegistryKey, QStringLiteral("DisplayNameResource"), REG_EXPAND_SZ, displayName },
+        { providerSyncRootIdRegistryKey, QStringLiteral("IconResource"), REG_EXPAND_SZ, QString(QDir::toNativeSeparators(qApp->applicationFilePath()) + QStringLiteral(",0")) },
+        { providerSyncRootIdUserSyncRootsRegistryKey, windowsSid, REG_SZ, syncRootPath },
         {providerSyncRootIdRegistryKey, QStringLiteral("MenuVerbHandler_0"),  REG_SZ, QString("{165cd069-d9c8-42b4-8e37-b6971afa4495}")},
         {providerSyncRootIdRegistryKey, QStringLiteral("ThumbnailProvider"),  REG_SZ, QString("{F137128F-A873-498A-867F-3637045ECE20}")},
         {providerSyncRootIdRegistryKey, QStringLiteral("CustomStateHandler"), REG_SZ, QString("{f0c9de6c-6c76-44d7-a58e-579cdf7af264}")},
@@ -548,7 +553,7 @@ winrt::IAsyncAction registerSyncRootAndShell(const QString &providerName, const 
 
     try {
         winrt::StorageProviderSyncRootManager::Register(info);
-        createSyncRootRegistryKeys(providerName, folderAlias, navigationPaneClsid, displayName, accountDisplayName);
+        createSyncRootRegistryKeys(providerName, folderAlias, navigationPaneClsid, displayName, accountDisplayName, syncRootPath);
         Sleep(1000);
     } catch (...) {
         throw;
@@ -565,67 +570,116 @@ void OCC::CfApiWrapper::InitAndStartServiceTask()
     }
 }
 
-OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &path, const QString &providerName, const QString &providerVersion, const QString &folderAlias, const QString &navigationPaneClsid, const QString &displayName, const QString &accountDisplayName)
+OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &path, const QString &providerName,
+    const QString &providerVersion, const QString &folderAlias, const QString &navigationPaneClsid,
+    const QString &displayName,
+    const QString &accountDisplayName)
 {
-    const auto windowsSid = retrieveWindowsSid();
-    Q_ASSERT(!windowsSid.isEmpty());
-    if (windowsSid.isEmpty()) {
-        qCWarning(lcCfApiWrapper) << "Could not unregister the sync root on path" << path
-                                  << ". Because windowsSid is empty.";
-        return false;
+    // even if we fail to register our sync root with shell, we can still proceed with using the VFS
+    const auto createRegistryKeyResult = createSyncRootRegistryKeys(
+        providerName, folderAlias, navigationPaneClsid, displayName, accountDisplayName, path);
+    Q_ASSERT(createRegistryKeyResult);
+
+    if (!createRegistryKeyResult) {
+        qCWarning(lcCfApiWrapper) << "Failed to create the registry key for path:" << path;
     }
 
-    const auto syncRootId =
-        QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
+    // API is somehow keeping the pointers for longer than one would expect or freeing them itself
+    // the internal format of QString is likely the right one for wstring on Windows so there's in fact not necessarily
+    // a need to copy
+    const auto p = std::wstring(path.toStdWString().data());
+    const auto name = std::wstring(providerName.toStdWString().data());
+    const auto version = std::wstring(providerVersion.toStdWString().data());
 
-    const auto registeredSyncRoots = winrt::StorageProviderSyncRootManager::GetCurrentSyncRoots();
+    CF_SYNC_REGISTRATION info;
+    info.StructSize = static_cast<ULONG>(sizeof(info) + (name.length() + version.length()) * sizeof(wchar_t));
+    info.ProviderName = name.data();
+    info.ProviderVersion = version.data();
+    info.SyncRootIdentity = nullptr;
+    info.SyncRootIdentityLength = 0;
+    info.FileIdentity = nullptr;
+    info.FileIdentityLength = 0;
+    info.ProviderId = QUuid::createUuid();
 
-    for (const auto &registeredSyncRoot : registeredSyncRoots) {
-        if (registeredSyncRoot.Id() == syncRootId.toStdWString()) {
-            return {};
-        }
+    CF_SYNC_POLICIES policies;
+    policies.StructSize = sizeof(policies);
+    policies.Hydration.Primary = CF_HYDRATION_POLICY_FULL;
+    policies.Hydration.Modifier = CF_HYDRATION_POLICY_MODIFIER_NONE;
+    policies.Population.Primary = CF_POPULATION_POLICY_ALWAYS_FULL;
+    policies.Population.Modifier = CF_POPULATION_POLICY_MODIFIER_NONE;
+    policies.InSync = CF_INSYNC_POLICY_PRESERVE_INSYNC_FOR_SYNC_ENGINE;
+    policies.HardLink = CF_HARDLINK_POLICY_NONE;
+
+    const qint64 result = CfRegisterSyncRoot(p.data(), &info, &policies, CF_REGISTER_FLAG_UPDATE);
+    Q_ASSERT(result == S_OK);
+    if (result != S_OK) {
+        return QString::fromWCharArray(_com_error(result).ErrorMessage());
+    } else {
+        return {};
     }
-
-    try {
-        QEventLoop loop;
-        registerSyncRootAndShell(providerName, providerVersion, folderAlias, navigationPaneClsid, displayName, accountDisplayName, path).Completed([&](auto &&...) {
-            loop.exit(); 
-        });
-        loop.exec();
-    } catch (...) {
-        return QString::fromWCharArray(_com_error(winrt::to_hresult()).ErrorMessage());
-    }
-    
-    return {};
 }
 
-OCC::Result<void, QString> OCC::CfApiWrapper::unregisterSyncRoot(const QString &path, const QString &providerName, const QString &folderAlias, const QString &accountDisplayName)
+bool deleteSyncRootRegistryKey(
+    const QString &syncRootPath, const QString &providerName, const QString &accountDisplayName)
 {
-    const auto windowsSid = retrieveWindowsSid();
-    Q_ASSERT(!windowsSid.isEmpty());
-    if (windowsSid.isEmpty()) {
-        qCWarning(lcCfApiWrapper) << "Could not unregister the sync root on path" << path
-                                  << ". Because windowsSid is empty.";
-        return false;
+    const auto syncRootManagerRegistryKey =
+        QStringLiteral(R"(SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\SyncRootManager\)");
+
+    if (OCC::Utility::registryKeyExists(HKEY_LOCAL_MACHINE, syncRootManagerRegistryKey)) {
+        const auto windowsSid = retrieveWindowsSid();
+        Q_ASSERT(!windowsSid.isEmpty());
+        if (windowsSid.isEmpty()) {
+            qCWarning(lcCfApiWrapper) << "Failed to delete Registry key for shell integration on path" << syncRootPath
+                                      << ". Because windowsSid is empty.";
+            return false;
+        }
+
+        const auto currentUserSyncRootIdPattern =
+            QString("%1!%2!%3").arg(providerName).arg(windowsSid).arg(accountDisplayName);
+
+        bool result = true;
+
+        // walk through each registered syncRootId
+        OCC::Utility::registryWalkSubKeys(
+            HKEY_LOCAL_MACHINE, syncRootManagerRegistryKey, [&](HKEY, const QString &syncRootId) {
+                // make sure we have matching syncRootId(providerName!windowsSid!accountDisplayName)
+                if (syncRootId.startsWith(currentUserSyncRootIdPattern)) {
+                    const QString syncRootIdUserSyncRootsRegistryKey =
+                        syncRootManagerRegistryKey + syncRootId + QStringLiteral(R"(\UserSyncRoots\)");
+                    // check if there is a 'windowsSid' Registry value under \UserSyncRoots and it matches the sync
+                    // folder path we are removing
+                    if (OCC::Utility::registryGetKeyValue(
+                            HKEY_LOCAL_MACHINE, syncRootIdUserSyncRootsRegistryKey, windowsSid)
+                            .toString()
+                        == syncRootPath) {
+                        const QString syncRootIdToDelete = syncRootManagerRegistryKey + syncRootId;
+                        result = OCC::Utility::registryDeleteKeyTree(HKEY_LOCAL_MACHINE, syncRootIdToDelete);
+                    }
+                }
+            });
+        return result;
+    }
+    return true;
+}
+
+OCC::Result<void, QString> OCC::CfApiWrapper::unregisterSyncRoot(
+    const QString &path, const QString &providerName, const QString &accountDisplayName)
+{
+    const auto deleteRegistryKeyResult = deleteSyncRootRegistryKey(path, providerName, accountDisplayName);
+    Q_ASSERT(deleteRegistryKeyResult);
+
+    if (!deleteRegistryKeyResult) {
+        qCWarning(lcCfApiWrapper) << "Failed to delete the registry key for path:" << path;
     }
 
-    const auto syncRootId =
-        QString("%1!%2!%3!%4").arg(providerName).arg(windowsSid).arg(accountDisplayName).arg(folderAlias);
-
-    try {
-        winrt::StorageProviderSyncRootManager::Unregister(syncRootId.toStdWString());
-    } catch (...) {
-        // winrt::to_hresult() will eat the exception if it is a result of winrt::check_hresult,
-        // otherwise the exception will get rethrown and this method will crash out as it should
-        const auto errorCode = static_cast<HRESULT>(winrt::to_hresult());
-        const auto errorMessage = _com_error(static_cast<HRESULT>(winrt::to_hresult())).ErrorMessage();
-
-        qCCritical(lcCfApiWrapper) << "Could not unregister the sync root:" << syncRootId << "with error:" << errorCode << errorMessage;
-
-        return QString::fromWCharArray(errorMessage);
+    const auto p = path.toStdWString();
+    const qint64 result = CfUnregisterSyncRoot(p.data());
+    Q_ASSERT(result == S_OK);
+    if (result != S_OK) {
+        return QString::fromWCharArray(_com_error(result).ErrorMessage());
+    } else {
+        return {};
     }
-
-    return {};
 }
 
 OCC::Result<OCC::CfApiWrapper::ConnectionKey, QString> OCC::CfApiWrapper::connectSyncRoot(const QString &path, OCC::VfsCfApi *context)

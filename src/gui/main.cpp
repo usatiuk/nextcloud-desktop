@@ -65,6 +65,17 @@ void warnSystray()
             .arg(Theme::instance()->appNameGUI()));
 }
 
+#include <atlbase.h>
+
+template <class S>
+CLSID CreateGUID(const S& hexString)
+{
+    CLSID clsid;
+    CLSIDFromString(CComBSTR(hexString), &clsid);
+
+    return clsid;
+}
+
 int main(int argc, char **argv)
 {
     qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox");
@@ -76,7 +87,22 @@ int main(int argc, char **argv)
     Q_INIT_RESOURCE(resources);
     Q_INIT_RESOURCE(theme);
 
-    //ShellServices::InitAndStartServiceTask();
+    winrt::init_apartment();
+
+    IUnknown *pUnknown = NULL;
+    auto hShellServerInit = CoCreateInstance(CreateGUID("{F137128F-A873-498A-867F-3637045ECE20}"), NULL,
+        CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
+    if (FAILED(hShellServerInit)) {
+        printf("Error. Create Inst ance of pUnknown Failed.\n");
+    } else {
+        hShellServerInit = CoCreateInstance(CreateGUID("{f0c9de6c-6c76-44d7-a58e-579cdf7af264}"), NULL,
+            CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
+
+        hShellServerInit = CoCreateInstance(CreateGUID("{165cd069-d9c8-42b4-8e37-b6971afa4495}"), NULL,
+            CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
+    }
+        
+    CoUninitialize();
 
     qmlRegisterType<SyncStatusSummary>("com.nextcloud.desktopclient", 1, 0, "SyncStatusSummary");
     qmlRegisterType<EmojiModel>("com.nextcloud.desktopclient", 1, 0, "EmojiModel");

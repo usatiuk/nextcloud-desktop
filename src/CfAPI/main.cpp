@@ -18,14 +18,32 @@
 
 #include "ShellServices.h"
 
-#include <QtCore/QCoreApplication>
-
-int main(int argc, char **argv)
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-    winrt::init_apartment();
+    MSG msg = {0};
+    HRESULT hr;
+    DWORD dwRegister;
+   
+     do {
+        hr = CoInitialize(NULL);
+        if (FAILED(hr)) {
+            MessageBoxA(NULL, "Error. CoInitialize Failed.", "Tips", MB_OK | MB_ICONERROR);
+            break;
+        }
 
-    ShellServices::InitAndStartServiceTask();
+        ShellServices::InitAndStartServiceTask();
 
-    QCoreApplication a(argc, argv);
-    return a.exec();
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            DispatchMessage(&msg);
+        }
+
+        hr = CoRevokeClassObject(dwRegister);
+        if (FAILED(hr)) {
+            MessageBoxA(NULL, "Error. CoRevokeClassObject Failed.", "Tips", MB_OK | MB_ICONERROR);
+            break;
+        }
+
+    } while (false);
+
+    return msg.wParam;
 }

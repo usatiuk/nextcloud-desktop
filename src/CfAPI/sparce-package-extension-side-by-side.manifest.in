@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<assembly manifestVersion="1.0" xmlns="urn:schemas-microsoft-com:asm.v1">
+  <assemblyIdentity version="@APPLIATION_MANIFEST_IDENTITY_VERSION@" name="@APPLIATION_MANIFEST_IDENTITY_NAME@"/>
+  <msix xmlns="urn:schemas-microsoft-com:msix.v1"
+          publisher="@APPLIATION_MANIFEST_MSIX_PUBLISHER@"
+          packageName="@APPLIATION_MANIFEST_MSIX_PACKAGE_NAME@"
+          applicationId="@APPLIATION_MANIFEST_MSIX_APPLICATION_ID@"
+        />
+</assembly>

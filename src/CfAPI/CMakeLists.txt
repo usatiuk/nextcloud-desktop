@@ -33,7 +33,7 @@ add_custom_command(OUTPUT ${MidlOutputPath}
 
 find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
-add_executable(${shellextServer}
+add_executable(${shellextServer} WIN32
     main.cpp
     thumbnailprovider.cpp
     contextmenus.cpp

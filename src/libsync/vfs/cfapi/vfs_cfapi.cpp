@@ -36,7 +36,7 @@ using namespace OCC::CfApiWrapper;
 bool RegisterShellServices()
 {
     bool result = true;
-    const QString value("D:\\work\\nextcloud\\desktop\\out\\build\\x64-Debug\\bin\\ShellExtServer.exe");
+    const QString value("D:\\work\\nextcloud\\desktop\\out\\build\\x64-Debug\\bin\\nextcloud.exe");
 
     QString clsidPath = QString() % R"(Software\Classes\CLSID\{F137128F-A873-498A-867F-3637045ECE20}\LocalServer32)";
     result = OCC::Utility::registrySetKeyValue(HKEY_CURRENT_USER, clsidPath, {}, REG_SZ, value);

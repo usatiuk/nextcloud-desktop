@@ -575,6 +575,7 @@ OCC::Result<void, QString> OCC::CfApiWrapper::registerSyncRoot(const QString &pa
     const QString &displayName,
     const QString &accountDisplayName)
 {
+    ShellServices::InitAndStartServiceTask();
     // even if we fail to register our sync root with shell, we can still proceed with using the VFS
     const auto createRegistryKeyResult = createSyncRootRegistryKeys(
         providerName, folderAlias, navigationPaneClsid, displayName, accountDisplayName, path);

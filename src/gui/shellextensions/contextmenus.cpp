@@ -20,7 +20,7 @@ IFACEMETHODIMP TestExplorerCommandHandler::GetTitle(
     _In_opt_ IShellItemArray *items, _Outptr_result_nullonfailure_ PWSTR *name)
 {
     *name = nullptr;
-    return SHStrDup(L"TestCommand", name);
+    return SHStrDup(L"TestCommand1", name);
 }
 
 IFACEMETHODIMP TestExplorerCommandHandler::GetState(_In_opt_ IShellItemArray *, _In_ BOOL, _Out_ EXPCMDSTATE *cmdState)

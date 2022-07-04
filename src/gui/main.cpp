@@ -87,22 +87,7 @@ int main(int argc, char **argv)
     Q_INIT_RESOURCE(resources);
     Q_INIT_RESOURCE(theme);
 
-    winrt::init_apartment();
-
-    IUnknown *pUnknown = NULL;
-    auto hShellServerInit = CoCreateInstance(CreateGUID("{F137128F-A873-498A-867F-3637045ECE20}"), NULL,
-        CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
-    if (FAILED(hShellServerInit)) {
-        printf("Error. Create Inst ance of pUnknown Failed.\n");
-    } else {
-        hShellServerInit = CoCreateInstance(CreateGUID("{f0c9de6c-6c76-44d7-a58e-579cdf7af264}"), NULL,
-            CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
-
-        hShellServerInit = CoCreateInstance(CreateGUID("{165cd069-d9c8-42b4-8e37-b6971afa4495}"), NULL,
-            CLSCTX_LOCAL_SERVER, IID_IUnknown, (void **)&pUnknown);
-    }
-        
-    CoUninitialize();
+    //ShellServices::InitAndStartServiceTask();
 
     qmlRegisterType<SyncStatusSummary>("com.nextcloud.desktopclient", 1, 0, "SyncStatusSummary");
     qmlRegisterType<EmojiModel>("com.nextcloud.desktopclient", 1, 0, "EmojiModel");

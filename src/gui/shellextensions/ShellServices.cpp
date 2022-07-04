@@ -39,8 +39,7 @@ namespace
 
 void ShellServices::InitAndStartServiceTask()
 {
-    auto task = std::thread([]()
-    {
+    auto task = std::thread([]() {
         winrt::init_apartment(winrt::apartment_type::single_threaded);
 
         make_and_register_class_object<ThumbnailProvider>();
@@ -48,8 +47,7 @@ void ShellServices::InitAndStartServiceTask()
         make_and_register_class_object<winrt::CfApiShellExtensions::implementation::CustomStateProvider>();
 
         winrt::handle dummyEvent(CreateEvent(nullptr, FALSE, FALSE, nullptr));
-        if (!dummyEvent)
-        {
+        if (!dummyEvent) {
             winrt::throw_last_error();
         }
         DWORD index;

@@ -236,11 +236,6 @@ if(BUILD_CLIENT)
     endif(NOT BUILD_LIBRARIES_ONLY)
 endif()
 
-if(WIN32)
-    set(WIN_IDENTITY_PACKAGE_NAME "${APPLICATION_SHORTNAME}Identity.msix")
-    add_subdirectory(package-with-identity)
-endif()
-
 if(BUILD_SHELL_INTEGRATION)
     add_subdirectory(shell_integration)
 endif()

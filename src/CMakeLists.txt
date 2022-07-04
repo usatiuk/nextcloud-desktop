@@ -63,7 +63,6 @@ set(QML_IMPORT_PATH ${CMAKE_SOURCE_DIR}/theme CACHE STRING "" FORCE)
 
 add_subdirectory(csync)
 add_subdirectory(libsync)
-add_subdirectory(CfAPI)
 if (NOT BUILD_LIBRARIES_ONLY)
     add_subdirectory(cmd)
     if (BUILD_GUI)

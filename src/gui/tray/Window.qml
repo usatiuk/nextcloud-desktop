@@ -736,16 +736,6 @@ Window {
             anchors.left: trayWindowBackground.left
             anchors.right: trayWindowBackground.right
             anchors.bottom: trayWindowBackground.bottom
-            textLeftMargin: trayWindowBackground.Style.unifiedSearchResultTextLeftMargin
-            textRightMargin: trayWindowBackground.Style.unifiedSearchResultTextRightMargin
-            iconWidth: trayWindowBackground.Style.unifiedSearchResulIconWidth
-            iconLeftMargin: trayWindowBackground.Style.unifiedSearchResulIconLeftMargin
-            itemHeight: trayWindowBackground.Style.unifiedSearchItemHeight
-            titleFontSize: trayWindowBackground.Style.unifiedSearchResulTitleFontSize
-            sublineFontSize: trayWindowBackground.Style.unifiedSearchResulSublineFontSize
-            titleColor: Style.ncTextColor
-            sublineColor: Style.ncSecondaryTextColor
-            iconColor: "#afafaf"
         }
 
         ScrollView {

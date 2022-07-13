@@ -41,8 +41,8 @@ class ActivityListModel : public QAbstractListModel
     Q_OBJECT
 
     Q_PROPERTY(quint32 maxActionButtons READ maxActionButtons CONSTANT)
-
     Q_PROPERTY(AccountState *accountState READ accountState CONSTANT)
+
 public:
     enum DataRole {
         DarkIconRole = Qt::UserRole + 1,
@@ -88,25 +88,16 @@ public:
 
     ActivityList activityList() { return _finalList; }
     ActivityList errorsList() { return _notificationErrorsLists; }
-    void addNotificationToActivityList(Activity activity);
-    void clearNotifications();
-    void addErrorToActivityList(Activity activity);
-    void addIgnoredFileToList(Activity newActivity);
-    void addSyncFileItemToActivityList(Activity activity);
-    void removeActivityFromActivityList(int row);
-    void removeActivityFromActivityList(Activity activity);
 
     AccountState *accountState() const;
-    void setAccountState(AccountState *state);
+
+    int currentItem() const;
 
     static constexpr quint32 maxActionButtons()
     {
         return MaxActionButtons;
     }
 
-    void setCurrentItem(const int currentItem);
-
-    void setReplyMessageSent(const int activityIndex, const QString &message);
     QString replyMessageSent(const Activity &activity) const;
 
 public slots:
@@ -117,55 +108,77 @@ public slots:
     void slotTriggerAction(const int activityIndex, const int actionIndex);
     void slotTriggerDismiss(const int activityIndex);
 
+    void addNotificationToActivityList(Activity activity);
+    void addErrorToActivityList(Activity activity);
+    void addIgnoredFileToList(Activity newActivity);
+    void addSyncFileItemToActivityList(Activity activity);
+    void removeActivityFromActivityList(int row);
+    void removeActivityFromActivityList(Activity activity);
+
+    void setAccountState(AccountState *state);
+    void setReplyMessageSent(const int activityIndex, const QString &message);
+    void setCurrentItem(const int currentItem);
+
 signals:
     void activityJobStatusCode(int statusCode);
     void sendNotificationRequest(const QString &accountName, const QString &link, const QByteArray &verb, int row);
 
 protected:
-    void setup();
-    void activitiesReceived(const QJsonDocument &json, int statusCode);
     QHash<int, QByteArray> roleNames() const override;
 
-    void setAndRefreshCurrentlyFetching(bool value);
     bool currentlyFetching() const;
+
+    const ActivityList &finalList() const; // added for unit tests
+
+protected slots:
+    void activitiesReceived(const QJsonDocument &json, int statusCode);
+    void setAndRefreshCurrentlyFetching(bool value);
     void setDoneFetching(bool value);
     void setHideOldActivities(bool value);
     void setDisplayActions(bool value);
+    void setFinalList(const ActivityList &finalList); // added for unit tests
 
     virtual void startFetchJob();
 
-    // added these for unit tests
-    void setFinalList(const ActivityList &finalList);
-    const ActivityList &finalList() const;
-    int currentItem() const;
-    //
-
 private:
+    enum class ActivityEntryType {
+        DummyFetchingActivityType,
+        ActivityType,
+        NotificationType,
+        ErrorType,
+        IgnoredFileType,
+        SyncFileItemType,
+        MoreActivitiesAvailableType,
+    };
+
     static QVariantList convertLinksToMenuEntries(const Activity &activity);
     static QVariantList convertLinksToActionButtons(const Activity &activity);
     static QVariant convertLinkToActionButton(const ActivityLink &activityLink);
-    void combineActivityLists();
+
+    std::pair<int, int> rowRangeForEntryType(const ActivityEntryType type);
+    void addEntriesToActivityList(const ActivityList &activityList, const ActivityEntryType type);
+    void clearEntriesInActivityList(ActivityEntryType type);
     bool canFetchActivities() const;
 
     void ingestActivities(const QJsonArray &activities);
     void appendMoreActivitiesAvailableEntry();
-
     void insertOrRemoveDummyFetchingActivity();
 
-    void clearActivities();
+    Activity _notificationIgnoredFiles;
+    Activity _dummyFetchingActivities;
 
     ActivityList _activityLists;
     ActivityList _syncFileItemLists;
     ActivityList _notificationLists;
     ActivityList _listOfIgnoredFiles;
-    Activity _notificationIgnoredFiles;
     ActivityList _notificationErrorsLists;
     ActivityList _finalList;
-    int _currentItem = 0;
+
+    QSet<qint64> _presentedActivities;
 
     bool _displayActions = true;
 
-    int _totalActivitiesFetched = 0;
+    int _currentItem = 0;
     int _maxActivities = 100;
     int _maxActivitiesDays = 30;
     bool _showMoreActivitiesAvailableEntry = false;

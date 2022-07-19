@@ -108,6 +108,8 @@ protected slots:
 private:
     void setHelp();
 
+    void parseEditLocalFileArgument();
+
     /**
      * Maybe a newer version of the client was used with this config file:
      * if so, backup, confirm with user and remove the config that can't be read.
@@ -134,6 +136,7 @@ private:
     bool _userTriggeredConnect;
     bool _debugMode;
     bool _backgroundMode;
+    QUrl _editFileLocallyUrl;
 
     ClientProxy _proxy;
 

@@ -141,4 +141,6 @@ QString Utility::getCurrentUserName()
     return {};
 }
 
+void Utility::registerUriHandler() { }
+
 } // namespace OCC

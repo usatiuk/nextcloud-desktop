@@ -247,6 +247,11 @@ namespace Utility {
      */
     OCSYNC_EXPORT QString getCurrentUserName();
 
+    /**
+     * @brief Registeres a custom URI to handle edit file locally event
+     */
+    OCSYNC_EXPORT void registerUriHandler();
+
 #ifdef Q_OS_WIN
     OCSYNC_EXPORT bool registryKeyExists(HKEY hRootKey, const QString &subKey);
     OCSYNC_EXPORT QVariant registryGetKeyValue(HKEY hRootKey, const QString &subKey, const QString &valueName);

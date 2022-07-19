@@ -402,6 +402,8 @@ Application::Application(int &argc, char **argv)
     connect(_gui.data(), &ownCloudGui::isShowingSettingsDialog, this, &Application::slotGuiIsShowingSettings);
 
     _gui->createTray();
+
+    parseEditLocalFileArgument();
 }
 
 Application::~Application()
@@ -568,6 +570,8 @@ void Application::slotParseMessage(const QString &msg, QObject *)
             qApp->quit();
         }
 
+        parseEditLocalFileArgument();
+
     } else if (msg.startsWith(QLatin1String("MSG_SHOWMAINDIALOG"))) {
         qCInfo(lcApplication) << "Running for" << _startedAt.elapsed() / 1000.0 << "sec";
         if (_startedAt.elapsed() < 10 * 1000) {
@@ -643,7 +647,19 @@ void Application::parseOptions(const QStringList &options)
         } else if (option.endsWith(QStringLiteral(APPLICATION_DOTVIRTUALFILE_SUFFIX))) {
             // virtual file, open it after the Folder were created (if the app is not terminated)
             QTimer::singleShot(0, this, [this, option] { openVirtualFile(option); });
-        } else {
+        } else if (option.startsWith(APPLICATION_COMMAND_OPEN_URL_SCHEME"://open")) {
+            // the URL must be 'APPLICATION_COMMAND_OPEN_URL_SCHEME://open/username@example.com<optional port number :8080>/relative-path-to-file'
+            // e.g. nc://open/admin@nextcloud.lan:8080/Photos/lovely.jpg
+            // e.g. nc://open/user@example.de/Photos/lovely.jpg
+            _editFileLocallyUrl = QUrl::fromUserInput(option);
+            if (!_editFileLocallyUrl.isValid()) {
+                _editFileLocallyUrl.clear();
+                const auto errorParsingLocalFileEditingUrl = QString("The supplied url for local file editing '%1' is invalid!").arg(option);
+                qCInfo(lcApplication) << errorParsingLocalFileEditingUrl;
+                showHint(errorParsingLocalFileEditingUrl.toStdString());
+            }
+        }
+        else {
             showHint("Unrecognized option '" + option.toStdString() + "'");
         }
     }
@@ -722,6 +738,26 @@ bool Application::backgroundMode() const
 void Application::setHelp()
 {
     _helpOnly = true;
+}
+
+void Application::parseEditLocalFileArgument()
+{
+    if (!_editFileLocallyUrl.isValid()) {
+        return;
+    }
+
+    auto parameters = _editFileLocallyUrl.path().split('/', Qt::SkipEmptyParts);
+    _editFileLocallyUrl.clear();
+
+    if (parameters.size() < 2) {
+        qCWarning(lcApplication) << "Invalid URL for file local editing: " + parameters.join('/');
+        return;
+    }
+
+    const auto accountDisplayName = parameters.takeFirst();
+    const auto fileRemotePath = parameters.join('/');
+
+    FolderMan::instance()->editFileLocally(accountDisplayName, fileRemotePath);
 }
 
 QString substLang(const QString &lang)

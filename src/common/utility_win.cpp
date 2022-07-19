@@ -401,6 +401,10 @@ QString Utility::getCurrentUserName()
     return QString::fromWCharArray(username);
 }
 
+void Utility::registerUriHandler()
+{
+}
+
 Utility::NtfsPermissionLookupRAII::NtfsPermissionLookupRAII()
 {
     qt_ntfs_permission_lookup++;

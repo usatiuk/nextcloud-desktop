@@ -201,6 +201,9 @@ public:
     void setDirtyProxy();
     void setDirtyNetworkLimits();
 
+    /** opens a file with default app, if the file is present **/
+    void editFileLocally(const QString &accountDisplayName, const QString &relPath);
+
 signals:
     /**
       * signal to indicate a folder has changed its sync state.

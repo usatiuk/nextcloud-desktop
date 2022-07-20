@@ -23,14 +23,10 @@ import Style 1.0
 
 ColumnLayout {
     id: rootLayout
-    spacing: 0
+    spacing: Style.standardSpacing
     property NC.UserStatusSelectorModel userStatusSelectorModel
 
     Label {
-        Layout.topMargin: Style.standardSpacing * 2
-        Layout.leftMargin: Style.standardSpacing
-        Layout.rightMargin: Style.standardSpacing
-        Layout.bottomMargin: Style.standardSpacing
         Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
         font.bold: true
         text: qsTr("Online status")
@@ -39,8 +35,6 @@ ColumnLayout {
         
     GridLayout {
         id: topButtonsLayout
-
-        Layout.margins: Style.standardSpacing
         Layout.alignment: Qt.AlignTop
         columns: 2
         rows: 2
@@ -62,9 +56,6 @@ ColumnLayout {
 
             Layout.fillWidth: true
             implicitWidth: 200 // Pretty much a hack to ensure all the buttons are equal in width
-            Layout.preferredHeight: topButtonsLayout.maxButtonHeight
-            onImplicitHeightChanged: topButtonsLayout.updateMaxButtonHeight(implicitHeight)
-            Component.onCompleted: topButtonsLayout.updateMaxButtonHeight(implicitHeight)
         }
         UserStatusSelectorButton {
             checked: NC.UserStatus.Away === userStatusSelectorModel.onlineStatus
@@ -76,10 +67,7 @@ ColumnLayout {
 
             Layout.fillWidth: true
             implicitWidth: 200 // Pretty much a hack to ensure all the buttons are equal in width
-            Layout.preferredHeight: topButtonsLayout.maxButtonHeight
-            onImplicitHeightChanged: topButtonsLayout.updateMaxButtonHeight(implicitHeight)
-            Component.onCompleted: topButtonsLayout.updateMaxButtonHeight(implicitHeight)
-            
+
         }
         UserStatusSelectorButton {
             checked: NC.UserStatus.DoNotDisturb === userStatusSelectorModel.onlineStatus
@@ -114,10 +102,7 @@ ColumnLayout {
     }
 
     Label {
-        Layout.topMargin: Style.standardSpacing * 2
-        Layout.leftMargin: Style.standardSpacing
-        Layout.rightMargin: Style.standardSpacing
-        Layout.bottomMargin: Style.standardSpacing
+        Layout.topMargin: Style.standardSpacing
         Layout.alignment: Qt.AlignTop | Qt.AlignHCenter
         font.bold: true
         text: qsTr("Status message")
@@ -125,10 +110,6 @@ ColumnLayout {
     }
 
     RowLayout {
-        Layout.topMargin: Style.standardSpacing
-        Layout.leftMargin: Style.standardSpacing
-        Layout.rightMargin: Style.standardSpacing
-        Layout.bottomMargin: Style.standardSpacing * 2
         Layout.alignment: Qt.AlignTop
         Layout.fillWidth: true
 
@@ -252,8 +233,6 @@ ColumnLayout {
         PredefinedStatusButton {
             id: control
             Layout.fillWidth: true
-            Layout.leftMargin: Style.standardSpacing
-            Layout.rightMargin: Style.standardSpacing
             internalSpacing: Style.standardSpacing + fieldButton.padding + userStatusMessageTextField.padding
 
             emoji: modelData.icon
@@ -263,10 +242,7 @@ ColumnLayout {
     }
 
    RowLayout {
-       Layout.topMargin: Style.standardSpacing * 2
-       Layout.leftMargin: Style.standardSpacing
-       Layout.rightMargin: Style.standardSpacing
-       Layout.bottomMargin: Style.standardSpacing
+       Layout.topMargin: Style.standardSpacing
        Layout.alignment: Qt.AlignTop
        spacing: Style.standardSpacing
 
@@ -288,9 +264,15 @@ ColumnLayout {
    }
 
     RowLayout {
-        Layout.margins: Style.standardSpacing
+        Layout.fillWidth: true
         Layout.alignment: Qt.AlignTop
         
+        UserStatusSelectorButton {
+            Layout.fillWidth: true
+            primary: true
+            text: qsTr("Cancel")
+            onClicked: finished()
+        }
         UserStatusSelectorButton {
             Layout.fillWidth: true
             primary: true
@@ -298,16 +280,15 @@ ColumnLayout {
             onClicked: userStatusSelectorModel.clearUserStatus()
         }
         UserStatusSelectorButton {
+            Layout.fillWidth: true
             primary: true
             colored: true
-            Layout.fillWidth: true
             text: qsTr("Set status message")
             onClicked: userStatusSelectorModel.setUserStatus()
         }
     }
 
     ErrorBox {
-        Layout.margins: Style.standardSpacing
         Layout.fillWidth: true
         
         visible: userStatusSelectorModel.errorMessage != ""

@@ -541,7 +541,7 @@ void unregisterSyncRootShellExtensions(const QString &providerName, const QStrin
     const auto windowsSid = retrieveWindowsSid();
     Q_ASSERT(!windowsSid.isEmpty());
     if (windowsSid.isEmpty()) {
-        qCWarning(lcCfApiWrapper) << "Failed to set Registry keys for shell integration, as windowsSid is empty. Progress bar will not work.";
+        qCWarning(lcCfApiWrapper) << "Failed to unregister SyncRoot Shell Extensions!";
         return;
     }
 
@@ -549,18 +549,9 @@ void unregisterSyncRootShellExtensions(const QString &providerName, const QStrin
 
     const QString providerSyncRootIdRegistryKey = syncRootManagerRegKey + QStringLiteral("\\") + syncRootId;
 
-    const QStringList registryValuesToDelete = {
-        { QStringLiteral("MenuVerbHandler_0")},
-        { QStringLiteral("ThumbnailProvider")},
-        { QStringLiteral("CustomStateHandler")},
-        { QStringLiteral("NamespaceCLSID")}
-    };
+    OCC::Utility::registryDeleteKeyValue(HKEY_LOCAL_MACHINE, providerSyncRootIdRegistryKey, QStringLiteral("ThumbnailProvider"));
 
-    for (const auto &valueToDelete : qAsConst(registryValuesToDelete)) {
-        OCC::Utility::registryDeleteKeyValue(HKEY_LOCAL_MACHINE, providerSyncRootIdRegistryKey, valueToDelete);
-    }
-
-    qCInfo(lcCfApiWrapper) << "Successfully set Registry keys for shell integration at:" << providerSyncRootIdRegistryKey << ". Progress bar will work.";
+    qCInfo(lcCfApiWrapper) << "Successfully unregistered SyncRoot Shell Extensions!";
 }
 
 OCC::Result<void, QString> OCC::CfApiWrapper::unregisterSyncRoot(const QString &path, const QString &providerName, const QString &accountDisplayName)

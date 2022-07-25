@@ -82,7 +82,7 @@
       <string>@APPLICATION_REV_DOMAIN@</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>nc</string>
+        <string>@APPLICATION_URI_HANDLER_SCHEME@</string>
       </array>
     </dict>
   </array>

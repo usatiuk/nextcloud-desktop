@@ -401,9 +401,7 @@ QString Utility::getCurrentUserName()
     return QString::fromWCharArray(username);
 }
 
-void Utility::registerUriHandler()
-{
-}
+void Utility::registerUriHandlerForLocalEditing() { /* URI handler is registered via Nextcloud.wxs */ }
 
 Utility::NtfsPermissionLookupRAII::NtfsPermissionLookupRAII()
 {

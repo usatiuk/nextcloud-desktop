@@ -647,14 +647,14 @@ void Application::parseOptions(const QStringList &options)
         } else if (option.endsWith(QStringLiteral(APPLICATION_DOTVIRTUALFILE_SUFFIX))) {
             // virtual file, open it after the Folder were created (if the app is not terminated)
             QTimer::singleShot(0, this, [this, option] { openVirtualFile(option); });
-        } else if (option.startsWith(APPLICATION_COMMAND_OPEN_URL_SCHEME"://open")) {
-            // the URL must be 'APPLICATION_COMMAND_OPEN_URL_SCHEME://open/username@example.com<optional port number :8080>/relative-path-to-file'
+        } else if (option.startsWith(APPLICATION_URI_HANDLER_SCHEME"://open")) {
+            // the URL must be 'APPLICATION_URI_HANDLER_SCHEME://open/username@example.com<optional port number :8080>/relative-path-to-file'
             // e.g. nc://open/admin@nextcloud.lan:8080/Photos/lovely.jpg
             // e.g. nc://open/user@example.de/Photos/lovely.jpg
             _editFileLocallyUrl = QUrl::fromUserInput(option);
             if (!_editFileLocallyUrl.isValid()) {
                 _editFileLocallyUrl.clear();
-                const auto errorParsingLocalFileEditingUrl = QString("The supplied url for local file editing '%1' is invalid!").arg(option);
+                const QString errorParsingLocalFileEditingUrl = QStringLiteral("The supplied url for local file editing '%1' is invalid!").arg(option);
                 qCInfo(lcApplication) << errorParsingLocalFileEditingUrl;
                 showHint(errorParsingLocalFileEditingUrl.toStdString());
             }

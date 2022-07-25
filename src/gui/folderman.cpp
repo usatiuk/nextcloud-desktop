@@ -37,7 +37,6 @@
 #include <QSet>
 #include <QNetworkProxy>
 #include <QDesktopServices>
-
 #include <QtConcurrent>
 
 static const char versionC[] = "version";
@@ -166,7 +165,7 @@ void FolderMan::registerFolderWithSocketApi(Folder *folder)
 
 int FolderMan::setupFolders()
 {
-    Utility::registerUriHandler();
+    Utility::registerUriHandlerForLocalEditing();
 
     unloadAndDeleteAllFolders();
 

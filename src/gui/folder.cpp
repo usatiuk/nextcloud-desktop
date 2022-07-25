@@ -1275,7 +1275,7 @@ void Folder::slotNewShellExtensionConnection()
     queryItems.addQueryItem("fileId", record._fileId);
     queryItems.addQueryItem("x", thumbnailFileSize.value("x").toString());
     queryItems.addQueryItem("y", thumbnailFileSize.value("y").toString());
-    const QUrl jobUrl = Utility::concatUrlPath(accountState()->account()->url(), "core/preview", queryItems);
+    const QUrl jobUrl = Utility::concatUrlPath(accountState()->account()->url(), QLatin1String("/index.php/core/preview"), queryItems);
     const auto job = new SimpleNetworkJob(accountState()->account());
     job->startRequest("GET", jobUrl);
     connect(job, &SimpleNetworkJob::finishedSignal, this, [newConnection, disconnectAndCloseSocket, sendEmptyData](QNetworkReply *reply) {
